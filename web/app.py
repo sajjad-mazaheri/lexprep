@@ -54,6 +54,9 @@ _warmup_status = {
     'loaded': []
 }
 
+# Auto-warmup for gunicorn (when LEXPREP_WARMUP=true)
+_auto_warmup_done = False
+
 
 def preload_models():
     """Preload all NLP models at startup to avoid cold start delays."""
@@ -133,6 +136,21 @@ def preload_models():
 
     _warmup_status['completed'] = True
     print(f"[Warmup] Complete. Loaded: {_warmup_status['loaded']}")
+
+
+# Auto-warmup at module load (for gunicorn with --preload)
+def _do_auto_warmup():
+    global _auto_warmup_done
+    if _auto_warmup_done:
+        return
+    if os.environ.get('LEXPREP_WARMUP', '').lower() == 'true':
+        print("[Startup] Running model warmup (gunicorn preload)...")
+        import sys
+        sys.stdout.flush()
+        preload_models()
+        _auto_warmup_done = True
+
+_do_auto_warmup()
 
 
 # Background job storage for async processing
