@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - lexprep</title>
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="icon" type="image/png" href="/static/images/favicon.png">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Animated Background -->
+    <div class="bg-gradient"></div>
+    <div class="bg-pattern"></div>
+    
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/" class="nav-logo">
+                <img src="/static/images/logo.png" alt="lexprep" class="logo-img">
+            </a>
+            <ul class="nav-menu">
+                <li><a href="/" class="nav-link">Tools</a></li>
+                <li><a href="/sampling" class="nav-link">Sampling</a></li>
+                <li><a href="/about" class="nav-link">About</a></li>
+                <li><a href="/references" class="nav-link">References</a></li>
+                <li><a href="/author" class="nav-link">Author</a></li>
+                <li><a href="/contribute" class="nav-link">Contribute</a></li>
+            </ul>
+            <button type="button" class="nav-toggle" id="navToggle" aria-label="Toggle menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Admin Header -->
+    <header class="admin-header">
+        <div class="container">
+            <h1 class="page-title">
+                <span class="gradient-text">Admin</span> Panel
+            </h1>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="content-section">
+        <div class="container">
+            <!-- Login Section (shown when not authenticated) -->
+            <div id="loginSection" class="content-card admin-login">
+                <h3>🔐 Admin Login</h3>
+                <p style="margin-bottom: 24px; color: var(--gray-400);">
+                    Enter your admin secret to view analytics.
+                </p>
+                <input 
+                    type="password" 
+                    id="adminSecret" 
+                    class="admin-input" 
+                    placeholder="Enter admin secret"
+                    autocomplete="off"
+                >
+                <button class="btn btn-primary" id="loginBtn" style="width: 100%;">
+                    <span class="btn-icon">🔓</span>
+                    Login
+                </button>
+            </div>
+
+            <!-- Dashboard Section (shown when authenticated) -->
+            <div id="dashboardSection" style="display: none;">
+                <!-- Stats Overview -->
+                <div class="stats-grid" id="statsGrid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="totalViews">-</div>
+                        <div class="stat-label">Total Page Views</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="uniqueVisitors">-</div>
+                        <div class="stat-label">Unique Visitors</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="totalProcessed">-</div>
+                        <div class="stat-label">Words Processed</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="toolUsage">-</div>
+                        <div class="stat-label">Tool Uses</div>
+                    </div>
+                </div>
+
+                <!-- Page Views by Page -->
+                <div class="content-card">
+                    <h3>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="vertical-align: middle; margin-right: 8px;">
+                            <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
+                        </svg>
+                        Page Views
+                    </h3>
+                    <div class="results-table-wrapper">
+                        <table class="results-table">
+                            <thead>
+                                <tr>
+                                    <th>Page</th>
+                                    <th>Views</th>
+                                </tr>
+                            </thead>
+                            <tbody id="pageViewsBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Tool Usage -->
+                <div class="content-card">
+                    <h3>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="vertical-align: middle; margin-right: 8px;">
+                            <path d="M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6 6 9 1.6 4.7C.4 7.1.9 10.1 2.9 12.1c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.5-.4.5-1.1.1-1.4z"/>
+                        </svg>
+                        Tool Usage
+                    </h3>
+                    <div class="results-table-wrapper">
+                        <table class="results-table">
+                            <thead>
+                                <tr>
+                                    <th>Language</th>
+                                    <th>Tool</th>
+                                    <th>Usage Count</th>
+                                    <th>Total Words</th>
+                                </tr>
+                            </thead>
+                            <tbody id="toolUsageBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Daily Activity -->
+                <div class="content-card">
+                    <h3>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="vertical-align: middle; margin-right: 8px;">
+                            <path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/>
+                        </svg>
+                        Daily Activity (Last 7 Days)
+                    </h3>
+                    <div class="results-table-wrapper">
+                        <table class="results-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Views</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dailyViewsBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Logout -->
+                <div style="text-align: center; margin-top: 32px;">
+                    <button class="btn btn-secondary" id="logoutBtn">
+                        <span class="btn-icon">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/>
+                            </svg>
+                        </span>
+                        Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+{% include 'partials/footer.html' %}
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast">
+        <span class="toast-icon"></span>
+        <span class="toast-message"></span>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+    <script>
+        // Admin Panel Logic
+        const adminState = {
+            secret: localStorage.getItem('adminSecret') || ''
+        };
+
+        const adminElements = {
+            loginSection: document.getElementById('loginSection'),
+            dashboardSection: document.getElementById('dashboardSection'),
+            adminSecret: document.getElementById('adminSecret'),
+            loginBtn: document.getElementById('loginBtn'),
+            logoutBtn: document.getElementById('logoutBtn'),
+            totalViews: document.getElementById('totalViews'),
+            uniqueVisitors: document.getElementById('uniqueVisitors'),
+            totalProcessed: document.getElementById('totalProcessed'),
+            toolUsage: document.getElementById('toolUsage'),
+            pageViewsBody: document.getElementById('pageViewsBody'),
+            toolUsageBody: document.getElementById('toolUsageBody'),
+            dailyViewsBody: document.getElementById('dailyViewsBody')
+        };
+
+        // Check if already logged in
+        if (adminState.secret) {
+            loadDashboard();
+        }
+
+        // Login button handler
+        adminElements.loginBtn.addEventListener('click', async () => {
+            const secret = adminElements.adminSecret.value.trim();
+            if (!secret) {
+                window.lexprep.showToast('Please enter the admin secret', 'error');
+                return;
+            }
+
+            adminState.secret = secret;
+            localStorage.setItem('adminSecret', secret);
+            await loadDashboard();
+        });
+
+        // Enter key handler
+        adminElements.adminSecret.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                adminElements.loginBtn.click();
+            }
+        });
+
+        // Logout handler
+        adminElements.logoutBtn.addEventListener('click', () => {
+            adminState.secret = '';
+            localStorage.removeItem('adminSecret');
+            adminElements.loginSection.style.display = 'block';
+            adminElements.dashboardSection.style.display = 'none';
+            adminElements.adminSecret.value = '';
+            window.lexprep.showToast('Logged out successfully', 'success');
+        });
+
+        // Load dashboard data
+        async function loadDashboard() {
+            try {
+                const data = await window.lexprep.loginAdmin(adminState.secret);
+                
+                // Show dashboard
+                adminElements.loginSection.style.display = 'none';
+                adminElements.dashboardSection.style.display = 'block';
+
+                // Update stats
+                adminElements.totalViews.textContent = formatNumber(data.total_views);
+                adminElements.uniqueVisitors.textContent = formatNumber(data.unique_visitors);
+                
+                // Calculate total words processed
+                const totalWords = data.tool_stats.reduce((sum, stat) => sum + (stat.total_words || 0), 0);
+                adminElements.totalProcessed.textContent = formatNumber(totalWords);
+                
+                // Calculate total tool usage
+                const totalUsage = data.tool_stats.reduce((sum, stat) => sum + stat.usage_count, 0);
+                adminElements.toolUsage.textContent = formatNumber(totalUsage);
+
+                // Render page views
+                adminElements.pageViewsBody.innerHTML = Object.entries(data.views_by_page)
+                    .map(([page, count]) => `
+                        <tr>
+                            <td>${escapeHtml(page)}</td>
+                            <td>${formatNumber(count)}</td>
+                        </tr>
+                    `)
+                    .join('') || '<tr><td colspan="2" style="text-align: center; color: var(--gray-500);">No data yet</td></tr>';
+
+                // Render tool usage
+                adminElements.toolUsageBody.innerHTML = data.tool_stats
+                    .map(stat => `
+                        <tr>
+                            <td>${escapeHtml(stat.language)}</td>
+                            <td>${escapeHtml(stat.tool)}</td>
+                            <td>${formatNumber(stat.usage_count)}</td>
+                            <td>${formatNumber(stat.total_words)}</td>
+                        </tr>
+                    `)
+                    .join('') || '<tr><td colspan="4" style="text-align: center; color: var(--gray-500);">No data yet</td></tr>';
+
+                // Render daily views
+                adminElements.dailyViewsBody.innerHTML = data.daily_views
+                    .map(day => `
+                        <tr>
+                            <td>${escapeHtml(day.date)}</td>
+                            <td>${formatNumber(day.views)}</td>
+                        </tr>
+                    `)
+                    .join('') || '<tr><td colspan="2" style="text-align: center; color: var(--gray-500);">No data yet</td></tr>';
+
+            } catch (error) {
+                console.error('Dashboard load error:', error);
+                adminState.secret = '';
+                localStorage.removeItem('adminSecret');
+                adminElements.loginSection.style.display = 'block';
+                adminElements.dashboardSection.style.display = 'none';
+                window.lexprep.showToast('Invalid credentials or server error', 'error');
+            }
+        }
+
+        // Utility functions
+        function formatNumber(num) {
+            if (num === null || num === undefined) return '0';
+            return num.toLocaleString();
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = String(text);
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>

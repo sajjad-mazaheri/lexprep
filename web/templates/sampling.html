@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sampling Tools - lexprep</title>
+    <meta name="description" content="Stratified sampling and row shuffling tools for psycholinguistic research.">
+    <link rel="icon" type="image/png" href="/static/images/favicon.png">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Animated Background -->
+    <div class="bg-gradient"></div>
+    <div class="bg-pattern"></div>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/" class="nav-logo">
+                <img src="/static/images/logo.png" alt="lexprep" class="logo-img">
+            </a>
+            <ul class="nav-menu">
+                <li><a href="/" class="nav-link">Tools</a></li>
+                <li><a href="/sampling" class="nav-link active">Sampling</a></li>
+                <li><a href="/about" class="nav-link">About</a></li>
+                <li><a href="/references" class="nav-link">References</a></li>
+                <li><a href="/accuracy" class="nav-link">Accuracy</a></li>
+                <li><a href="/author" class="nav-link">Author</a></li>
+                <li><a href="/contribute" class="nav-link">Contribute</a></li>
+            </ul>
+            <button type="button" class="nav-toggle" id="navToggle" aria-label="Toggle menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Page Header -->
+    <header class="page-header">
+        <div class="container">
+            <h1 class="page-title">
+                <span class="gradient-text">Sampling Tools</span>
+            </h1>
+            <p class="page-subtitle">
+                Statistical sampling methods for experimental stimulus selection
+            </p>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <div class="tool-card">
+                <!-- Tool Tabs -->
+                <div class="tool-tabs">
+                    <button class="tool-tab active" data-tab="stratified">
+                        <svg class="tab-icon" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M3 3v18h18v-2H5V3H3zm15.83 9.17l-4.24-4.24-1.41 1.41 2.82 2.83-2.82 2.83 1.41 1.41 4.24-4.24zm-9.66 0l4.24 4.24 1.41-1.41-2.82-2.83 2.82-2.83-1.41-1.41-4.24 4.24z"/>
+                        </svg>
+                        Stratified Sampling
+                    </button>
+                    <button class="tool-tab" data-tab="shuffle">
+                        <svg class="tab-icon" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/>
+                        </svg>
+                        Row Shuffling
+                    </button>
+                </div>
+
+                <!-- Stratified Sampling Panel -->
+                <div class="tool-panel active" id="stratifiedPanel">
+                    <div class="card-header">
+                        <h2>Stratified Sampling</h2>
+                        <p>Select balanced samples across value ranges
+                            <a href="#" class="help-link" onclick="openModal('stratifiedHelp'); return false;">
+                                Learn more
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/>
+                                </svg>
+                            </a>
+                        </p>
+                    </div>
+
+                    <form id="stratifiedForm" enctype="multipart/form-data">
+                        <!-- Step 1: Upload File -->
+                        <div class="form-section">
+                            <label class="form-label">
+                                <span class="step-number">1</span>
+                                Upload Your Data File
+                            </label>
+                            <div class="file-upload-area" id="stratFileArea">
+                                <input type="file" id="stratFile" name="file" accept=".csv,.tsv,.xlsx,.xls" hidden>
+                                <div class="upload-content" id="stratUploadContent">
+                                    <div class="upload-icon">
+                                        <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor" opacity="0.5">
+                                            <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/>
+                                        </svg>
+                                    </div>
+                                    <p class="upload-text">Drag & drop your file here</p>
+                                    <p class="upload-subtext">or click to browse</p>
+                                    <p class="upload-formats">Excel, CSV, or TSV files</p>
+                                </div>
+                                <div class="upload-preview" id="stratFilePreview" style="display: none;">
+                                    <div class="file-info">
+                                        <span class="file-name" id="stratFileName"></span>
+                                    </div>
+                                    <button type="button" class="remove-file" id="removeStratFile">&times;</button>
+                                </div>
+                            </div>
+                            <div id="stratFileInfo" style="display: none;"></div>
+                        </div>
+
+                        <!-- Step 2: Select Column -->
+                        <div class="form-section" id="stratColumnSection" style="display: none;">
+                            <label class="form-label">
+                                <span class="step-number">2</span>
+                                Select Stratification Variable
+                                <span class="help-tooltip" data-tooltip="The numeric column used to divide data into groups (e.g., word frequency, age, score)">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/>
+                                    </svg>
+                                </span>
+                            </label>
+                            <select id="stratColumn" name="score_col" class="format-select" style="width: 100%; padding: 0.75rem; margin-top: 0.5rem;">
+                                <option value="">Select a numeric column...</option>
+                            </select>
+                        </div>
+
+                        <!-- Step 3: Configure -->
+                        <div class="form-section" id="stratConfigSection" style="display: none;">
+                            <label class="form-label">
+                                <span class="step-number">3</span>
+                                Configure Sampling
+                            </label>
+
+                            <!-- Mode Toggle -->
+                            <div class="mode-toggle">
+                                <button type="button" class="mode-btn active" data-mode="quantile">Automatic Bins</button>
+                                <button type="button" class="mode-btn" data-mode="custom">Custom Ranges</button>
+                            </div>
+
+                            <!-- Quantile Mode -->
+                            <div id="quantileConfig">
+                                <div class="input-grid">
+                                    <div class="input-group">
+                                        <label for="nTotal">Total Samples</label>
+                                        <input type="number" id="nTotal" name="n_total" min="1" placeholder="60" required>
+                                        <span class="input-help">Number of items to select</span>
+                                    </div>
+                                    <div class="input-group">
+                                        <label for="bins">Number of Groups</label>
+                                        <input type="number" id="bins" name="bins" min="2" max="10" value="3" required>
+                                        <span class="input-help">Data will be split into equal-frequency groups</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Custom Range Mode -->
+                            <div id="customConfig" style="display: none;">
+                                <div class="input-group" id="nTotalCustomGroup" style="margin-bottom: 1rem;">
+                                    <label for="nTotalCustom">Total Samples</label>
+                                    <input type="number" id="nTotalCustom" min="1" placeholder="60">
+                                    <span class="input-help">Number of items to select (distributed across ranges)</span>
+                                </div>
+                                <label style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 0.5rem; display: block;">
+                                    Define Value Ranges:
+                                    <span id="fixedCountHeader" style="display: none; color: #fbbf24; margin-left: 0.5rem;">(specify count per range)</span>
+                                </label>
+                                <div id="rangeBuilder" class="range-builder">
+                                    <div class="range-row">
+                                        <div class="range-input-wrap">
+                                            <input type="number" step="any" placeholder="Min" class="range-min">
+                                        </div>
+                                        <div class="range-input-wrap">
+                                            <input type="number" step="any" placeholder="Max" class="range-max">
+                                        </div>
+                                        <div class="range-count-wrap">
+                                            <input type="number" min="0" placeholder="Count" class="range-fixed-count" title="Fixed count for this range">
+                                        </div>
+                                        <button type="button" class="remove-range-btn" onclick="this.closest('.range-row').remove()" title="Remove">&times;</button>
+                                    </div>
+                                </div>
+                                <button type="button" class="add-range-btn" onclick="addRangeRow()">+ Add Range</button>
+                            </div>
+
+                            <!-- Advanced Options Toggle -->
+                            <div class="advanced-toggle" onclick="toggleAdvanced()">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M7 10l5 5 5-5z"/>
+                                </svg>
+                                Advanced options
+                            </div>
+                            <div class="advanced-options" id="advancedOptions">
+                                <div class="input-grid">
+                                    <div class="input-group">
+                                        <label for="allocation">
+                                            Allocation Method
+                                            <a href="#" class="help-link" style="margin-left: 0.5rem;" onclick="openModal('allocationHelp'); return false;">
+                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/>
+                                                </svg>
+                                            </a>
+                                        </label>
+                                        <select id="allocation" name="allocation" class="format-select" onchange="handleAllocationChange()">
+                                            <option value="equal">Equal (same from each group)</option>
+                                            <option value="proportional">Proportional (by group size)</option>
+                                            <option value="optimal">Optimal (Neyman - minimize variance)</option>
+                                            <option value="fixed">Fixed (specify count per group)</option>
+                                        </select>
+                                        <div class="allocation-info" id="allocationInfo">
+                                            Each stratum gets the same number of samples: n/k where n=total samples, k=number of groups.
+                                        </div>
+                                    </div>
+                                    <div class="input-group">
+                                        <label for="randomSeed">Random Seed</label>
+                                        <input type="number" id="randomSeed" name="random_state" value="19">
+                                        <span class="input-help">For reproducible results</span>
+                                    </div>
+                                </div>
+
+                                <!-- Weights Checkbox (for non-fixed allocation) -->
+                                <div class="checkbox-option" id="weightsCheckboxWrap">
+                                    <input type="checkbox" id="useWeights" onchange="toggleWeightsPanel()">
+                                    <label for="useWeights">Use custom weights (override allocation proportions)</label>
+                                </div>
+                                <div class="weights-panel" id="weightsPanel">
+                                    <div class="weights-grid" id="weightsGrid">
+                                        <!-- Dynamically populated based on bins/ranges -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Process Button -->
+                        <div class="button-group" id="stratButtonGroup" style="display: none;">
+                            <button type="submit" class="btn btn-primary btn-process" id="stratifiedBtn">
+                                <span class="btn-text">Generate Sample</span>
+                            </button>
+                        </div>
+
+                        <!-- Results/Warnings Area -->
+                        <div id="stratifiedResults" style="display: none; margin-top: 1.5rem;">
+                            <div class="warning-box">
+                                <h4 style="margin: 0 0 0.5rem 0; font-size: 0.95rem;">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="vertical-align: middle; margin-right: 6px;">
+                                        <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
+                                    </svg>
+                                    Sampling Warnings
+                                </h4>
+                                <ul id="stratifiedWarningsList" style="margin: 0; padding-left: 1.5rem; font-size: 0.9rem;"></ul>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Shuffle Panel -->
+                <div class="tool-panel" id="shufflePanel">
+                    <div class="card-header">
+                        <h2>Row Shuffling</h2>
+                        <p>Randomize rows across multiple matched files
+                            <a href="#" class="help-link" onclick="openModal('shuffleHelp'); return false;">
+                                Learn more
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/>
+                                </svg>
+                            </a>
+                        </p>
+                    </div>
+
+                    <form id="shuffleForm" enctype="multipart/form-data">
+                        <!-- Step 1: Upload Files -->
+                        <div class="form-section">
+                            <label class="form-label">
+                                <span class="step-number">1</span>
+                                Upload Files (minimum 2)
+                            </label>
+                            <div class="file-upload-area" id="shuffleFilesArea">
+                                <input type="file" id="shuffleFiles" name="files" accept=".csv,.tsv,.xlsx,.xls" multiple hidden>
+                                <div class="upload-content" id="shuffleUploadContent">
+                                    <div class="upload-icon">
+                                        <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor" opacity="0.5">
+                                            <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/>
+                                        </svg>
+                                    </div>
+                                    <p class="upload-text">Drag & drop files here</p>
+                                    <p class="upload-subtext">or click to browse (minimum 2 files)</p>
+                                    <p class="upload-formats">All files must have the same number of rows</p>
+                                </div>
+                                <div class="upload-preview" id="shuffleFilesPreview" style="display: none;">
+                                    <div class="file-info" id="shuffleFilesList"></div>
+                                    <button type="button" class="remove-file" id="removeShuffleFiles">&times;</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Step 2: Configure -->
+                        <div class="form-section" id="shuffleConfigSection" style="display: none;">
+                            <label class="form-label">
+                                <span class="step-number">2</span>
+                                Configure (optional)
+                            </label>
+                            <div class="input-grid">
+                                <div class="input-group">
+                                    <label for="shuffleSeed">Random Seed</label>
+                                    <input type="number" id="shuffleSeed" name="seed" value="19">
+                                    <span class="input-help">For reproducible results</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Process Button -->
+                        <div class="button-group" id="shuffleButtonGroup" style="display: none;">
+                            <button type="submit" class="btn btn-primary btn-process" id="shuffleBtn">
+                                <span class="btn-text">Shuffle Files</span>
+                            </button>
+                        </div>
+
+                        <!-- Results/Warnings Area -->
+                        <div id="stratifiedResults" style="display: none; margin-top: 1.5rem;">
+                            <div class="warning-box">
+                                <h4 style="margin: 0 0 0.5rem 0; font-size: 0.95rem;">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="vertical-align: middle; margin-right: 6px;">
+                                        <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
+                                    </svg>
+                                    Sampling Warnings
+                                </h4>
+                                <ul id="stratifiedWarningsList" style="margin: 0; padding-left: 1.5rem; font-size: 0.9rem;"></ul>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Help Modals -->
+    <div class="modal-overlay" id="stratifiedHelp">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>About Stratified Sampling</h3>
+                <button class="modal-close" onclick="closeModal('stratifiedHelp')">&times;</button>
+            </div>
+            <p>
+                <strong>Stratified sampling</strong> divides your data into homogeneous subgroups (strata)
+                based on a numeric variable, then samples from each group independently.
+            </p>
+            <h4>Why use it?</h4>
+            <ul>
+                <li>Ensures representation across the full range of values</li>
+                <li>Random sampling alone may over-represent common values</li>
+                <li>Reduces sampling variance compared to simple random sampling</li>
+            </ul>
+            <h4>Automatic vs Custom</h4>
+            <p>
+                <strong>Automatic Bins:</strong> Divides data into equal-frequency groups (quantiles).
+                If you select 3 bins with 1000 items, each bin contains ~333 items with different value ranges.
+            </p>
+            <p>
+                <strong>Custom Ranges:</strong> You define the exact value boundaries. Useful when natural
+                groupings exist (e.g., frequency bands: 1-100, 101-1000, 1001+).
+            </p>
+            <h4>Allocation Methods</h4>
+            <ul>
+                <li><code>Equal</code>: Same number from each group (default)</li>
+                <li><code>Proportional</code>: More samples from larger groups</li>
+                <li><code>Optimal</code>: Minimizes variance (Neyman allocation)</li>
+                <li><code>Fixed</code>: You specify exact count per group</li>
+            </ul>
+            <p style="font-size: 0.85rem;">
+                <a href="#" onclick="closeModal('stratifiedHelp'); openModal('allocationHelp'); return false;" style="color: #60a5fa;">
+                    See detailed explanation of allocation methods &rarr;
+                </a>
+            </p>
+            <h4>References</h4>
+            <p style="font-size: 0.85rem;">
+                Cochran, W.G. (1977). <em>Sampling Techniques</em> (3rd ed.). Wiley.<br>
+                Lohr, S.L. (2019). <em>Sampling: Design and Analysis</em> (3rd ed.). CRC Press.
+            </p>
+        </div>
+    </div>
+
+    <!-- Allocation Methods Help Modal -->
+    <div class="modal-overlay" id="allocationHelp">
+        <div class="modal-content" style="max-width: 700px;">
+            <div class="modal-header">
+                <h3>Allocation Methods Explained</h3>
+                <button class="modal-close" onclick="closeModal('allocationHelp')">&times;</button>
+            </div>
+
+            <h4>1. Equal Allocation</h4>
+            <p>
+                <strong>Formula:</strong> <code>n_h = n / H</code><br>
+                Where n = total samples, H = number of strata
+            </p>
+            <p>
+                Each stratum gets the same number of samples regardless of size.
+            </p>
+            <p><strong>Example:</strong> With 60 total samples and 3 groups:<br>
+                Group 1 (500 items): 20 samples<br>
+                Group 2 (300 items): 20 samples<br>
+                Group 3 (200 items): 20 samples
+            </p>
+            <p><strong>Best for:</strong> When all groups are equally important, or when you want balanced representation.</p>
+
+            <h4>2. Proportional Allocation</h4>
+            <p>
+                <strong>Formula:</strong> <code>n_h = n * (N_h / N)</code><br>
+                Where N_h = stratum size, N = total population
+            </p>
+            <p>
+                Larger strata get more samples, proportional to their size in the population.
+            </p>
+            <p><strong>Example:</strong> With 60 total samples from 1000 items:<br>
+                Group 1 (500 items, 50%): 30 samples<br>
+                Group 2 (300 items, 30%): 18 samples<br>
+                Group 3 (200 items, 20%): 12 samples
+            </p>
+            <p><strong>Best for:</strong> When you want the sample to reflect the population distribution.</p>
+
+            <h4>3. Optimal (Neyman) Allocation</h4>
+            <p>
+                <strong>Formula:</strong> <code>n_h = n * (N_h * S_h) / sum(N_j * S_j)</code><br>
+                Where S_h = standard deviation in stratum h
+            </p>
+            <p>
+                Allocates more samples to strata with higher variability (larger standard deviation).
+                This minimizes the overall variance of the sample estimate.
+            </p>
+            <p><strong>Example:</strong> With 60 samples, if Group 1 has high variance:<br>
+                Group 1 (high variance): 35 samples<br>
+                Group 2 (medium variance): 15 samples<br>
+                Group 3 (low variance): 10 samples
+            </p>
+            <p><strong>Best for:</strong> When you want the most statistically efficient sample (lowest variance for a given sample size).</p>
+
+            <h4>4. Fixed Allocation</h4>
+            <p>
+                You specify the exact number of samples for each stratum manually.
+            </p>
+            <p><strong>Example:</strong><br>
+                Group 1: 25 samples (you specify)<br>
+                Group 2: 20 samples (you specify)<br>
+                Group 3: 15 samples (you specify)
+            </p>
+            <p><strong>Best for:</strong> When you have specific requirements for each group (e.g., need exactly 20 high-frequency and 40 low-frequency words).</p>
+
+            <h4>Custom Weights</h4>
+            <p>
+                Weights let you override any allocation method. If you set weights {1: 2.0, 2: 1.0, 3: 1.0},
+                Group 1 gets twice as many samples as Groups 2 and 3.
+            </p>
+
+            <h4>Reference</h4>
+            <p style="font-size: 0.85rem;">
+                Cochran, W.G. (1977). <em>Sampling Techniques</em> (3rd ed.), Chapter 5. Wiley.
+            </p>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="shuffleHelp">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>About Row Shuffling</h3>
+                <button class="modal-close" onclick="closeModal('shuffleHelp')">&times;</button>
+            </div>
+            <p>
+                <strong>Row shuffling</strong> randomizes the assignment of rows across multiple
+                matched files while keeping them synchronized.
+            </p>
+            <h4>How it works</h4>
+            <p>
+                For each row position (row 1, row 2, etc.), the tool randomly determines which
+                file contributes that row to which output file. All output files remain synchronized.
+            </p>
+            <h4>Use cases</h4>
+            <ul>
+                <li><strong>Counterbalancing:</strong> Create randomized versions of stimulus lists</li>
+                <li><strong>Within-subjects designs:</strong> Randomize condition assignment</li>
+                <li><strong>Matched stimulus sets:</strong> Shuffle targets/distractors/fillers together</li>
+            </ul>
+            <h4>Requirements</h4>
+            <ul>
+                <li>Minimum 2 files</li>
+                <li>All files must have identical row counts</li>
+                <li>Column structure should match across files</li>
+            </ul>
+        </div>
+    </div>
+
+{% include 'partials/footer.html' %}
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>

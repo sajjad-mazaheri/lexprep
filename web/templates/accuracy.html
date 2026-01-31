@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accuracy - lexprep</title>
+    <meta name="description" content="Tool accuracy benchmarks and evaluation metrics for lexprep - linguistic data preparation toolkit.">
+    <link rel="icon" type="image/png" href="/static/images/favicon.png">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Animated Background -->
+    <div class="bg-gradient"></div>
+    <div class="bg-pattern"></div>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/" class="nav-logo">
+                <img src="/static/images/logo.png" alt="lexprep" class="logo-img">
+            </a>
+            <ul class="nav-menu">
+                <li><a href="/" class="nav-link">Tools</a></li>
+                <li><a href="/sampling" class="nav-link">Sampling</a></li>
+                <li><a href="/about" class="nav-link">About</a></li>
+                <li><a href="/references" class="nav-link">References</a></li>
+                <li><a href="/accuracy" class="nav-link active">Accuracy</a></li>
+                <li><a href="/author" class="nav-link">Author</a></li>
+                <li><a href="/contribute" class="nav-link">Contribute</a></li>
+            </ul>
+            <button type="button" class="nav-toggle" id="navToggle" aria-label="Toggle menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Page Header -->
+    <header class="page-header">
+        <div class="container">
+            <h1 class="page-title">
+                Tool <span class="gradient-text">Accuracy</span>
+            </h1>
+            <p class="page-subtitle">
+                Evaluation metrics and benchmarks for each tool
+            </p>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="content-section">
+        <div class="container">
+            <!-- Summary Overview -->
+            <div class="content-card">
+                <h3>Overview</h3>
+                <p>
+                    This page provides accuracy information for each tool in lexprep. Where official benchmarks
+                    exist, they are cited with references. Where no formal evaluation exists, estimates are clearly marked.
+                </p>
+
+                <!-- Summary Table -->
+                <div class="accuracy-summary">
+                    <div class="accuracy-row header">
+                        <span>Tool</span>
+                        <span>Library</span>
+                        <span>Accuracy</span>
+                        <span>Source</span>
+                    </div>
+                    <div class="accuracy-row">
+                        <span class="tool-name">English G2P</span>
+                        <span class="tool-library">g2p-en</span>
+                        <span class="accuracy-badge high">High</span>
+                        <a href="https://github.com/Kyubyong/g2p" target="_blank" class="source-link">Park & Kim (2019)</a>
+                    </div>
+                    <div class="accuracy-row">
+                        <span class="tool-name">English Syllables</span>
+                        <span class="tool-library">pyphen</span>
+                        <span class="accuracy-badge estimate">No benchmark</span>
+                        <a href="https://github.com/Kozea/Pyphen" target="_blank" class="source-link">Pyphen</a>
+                    </div>
+                    <div class="accuracy-row">
+                        <span class="tool-name">English POS</span>
+                        <span class="tool-library">spaCy</span>
+                        <span class="accuracy-badge high">96-97%</span>
+                        <a href="https://spacy.io/models/en" target="_blank" class="source-link">Explosion</a>
+                    </div>
+                    <div class="accuracy-row">
+                        <span class="tool-name">Persian G2P</span>
+                        <span class="tool-library">PersianG2p</span>
+                        <span class="accuracy-badge estimate">No benchmark</span>
+                        <a href="https://github.com/PasaOpasen/PersianG2P" target="_blank" class="source-link">~48K dictionary</a>
+                    </div>
+                    <div class="accuracy-row">
+                        <span class="tool-name">Persian Syllables</span>
+                        <span class="tool-library">Heuristic</span>
+                        <span class="accuracy-badge medium">~85-95%</span>
+                        <span class="source-link">Estimate</span>
+                    </div>
+                    <div class="accuracy-row">
+                        <span class="tool-name">Persian POS</span>
+                        <span class="tool-library">Stanza</span>
+                        <span class="accuracy-badge high">97.4%</span>
+                        <a href="https://stanfordnlp.github.io/stanza/performance.html" target="_blank" class="source-link">Qi et al. (2020)</a>
+                    </div>
+                    <div class="accuracy-row">
+                        <span class="tool-name">Japanese POS (Stanza)</span>
+                        <span class="tool-library">Stanza</span>
+                        <span class="accuracy-badge high">96-97%</span>
+                        <a href="https://stanfordnlp.github.io/stanza/performance.html" target="_blank" class="source-link">Qi et al. (2020)</a>
+                    </div>
+                    <div class="accuracy-row">
+                        <span class="tool-name">Japanese POS (UniDic)</span>
+                        <span class="tool-library">Fugashi+UniDic</span>
+                        <span class="accuracy-badge high">High</span>
+                        <a href="https://clrd.ninjal.ac.jp/unidic/" target="_blank" class="source-link">NINJAL Standard</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- English Tools -->
+            <div class="content-card">
+                <h3><img src="/static/images/united-states-flag-icon.svg" alt="US" class="flag-icon"> English Tools</h3>
+
+                <div class="tool-detail-card">
+                    <div class="tool-detail-header">
+                        <div class="tool-detail-title">
+                            <h4>G2P (Grapheme-to-Phoneme)</h4>
+                            <span class="tag">g2p-en</span>
+                        </div>
+                        <span class="accuracy-badge high">High accuracy</span>
+                    </div>
+                    <div class="tool-detail-body">
+                        <p><strong>How it works:</strong></p>
+                        <ol class="method-list">
+                            <li>Spells out numbers and currency symbols</li>
+                            <li>Disambiguates homographs using POS tags</li>
+                            <li>Looks up CMU Pronouncing Dictionary (~134,500 words)</li>
+                            <li>Predicts OOV words using neural seq2seq model</li>
+                        </ol>
+                        <p>
+                            <strong>Dictionary words:</strong> 100% accuracy (by definition - dictionary lookup)<br>
+                            <strong>OOV words:</strong> Neural prediction (no published benchmark)
+                        </p>
+                    </div>
+                </div>
+
+                <div class="tool-detail-card">
+                    <div class="tool-detail-header">
+                        <div class="tool-detail-title">
+                            <h4>Syllable Count</h4>
+                            <span class="tag">pyphen</span>
+                        </div>
+                        <span class="accuracy-badge estimate">No benchmark</span>
+                    </div>
+                    <div class="tool-detail-body">
+                        <p>
+                            Uses TeX-compatible hyphenation dictionaries from LibreOffice (Hunspell format)
+                            Hyphenates words using language-specific patterns; syllable count is inferred from hyphenation segments.
+                        </p>
+                
+                    </div>
+                </div>
+
+                <div class="tool-detail-card">
+                    <div class="tool-detail-header">
+                        <div class="tool-detail-title">
+                            <h4>POS Tagging</h4>
+                            <span class="tag">spaCy</span>
+                        </div>
+                        <span class="accuracy-badge high">96-97% accuracy</span>
+                    </div>
+                    <div class="tool-detail-body">
+                        <p><strong>Model:</strong> <code>en_core_web_sm</code> (trained on OntoNotes 5)</p>
+                        <table class="benchmark-table">
+                            <tr>
+                                <th>Metric</th>
+                                <th>Score</th>
+                            </tr>
+                            <tr>
+                                <td>Token accuracy</td>
+                                <td>97%</td>
+                            </tr>
+                            <tr>
+                                <td>POS accuracy</td>
+                                <td>97%</td>
+                            </tr>
+                            <tr>
+                                <td>Sentence segmentation F1</td>
+                                <td>91%</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Persian Tools -->
+            <div class="content-card">
+                <h3><img src="/static/images/iran-flag-icon.svg" alt="IR" class="flag-icon"> Persian Tools</h3>
+
+                <div class="tool-detail-card">
+                    <div class="tool-detail-header">
+                        <div class="tool-detail-title">
+                            <h4>G2P (Grapheme-to-Phoneme)</h4>
+                            <span class="tag">PersianG2p</span>
+                        </div>
+                        <span class="accuracy-badge estimate">No formal benchmark</span>
+                    </div>
+                    <div class="tool-detail-body">
+                        <p><strong>How it works:</strong></p>
+                        <ol class="method-list">
+                            <li>Normalizes text</li>
+                            <li>Looks up dictionary (~48,000 words with <code>use_large=True</code>)</li>
+                            <li>Predicts unknown words using neural network</li>
+                        </ol>
+                        <p>
+                            <strong>Dictionary size:</strong> ~48,000 Persian words<br>
+                            <strong>OOV handling:</strong> Neural model prediction
+                        </p>
+                    </div>
+                </div>
+
+                <div class="tool-detail-card">
+                    <div class="tool-detail-header">
+                        <div class="tool-detail-title">
+                            <h4>Syllable Count</h4>
+                            <span class="tag">Heuristic</span>
+                        </div>
+                        <span class="accuracy-badge medium">~85-95% estimated</span>
+                    </div>
+                    <div class="tool-detail-body">
+                        <p><strong>Methods available:</strong></p>
+                        <ul class="method-list">
+                            <li><strong>Orthographic:</strong> Counts vowel patterns in Persian spelling (~65-80%)</li>
+                            <li><strong>Phonetic:</strong> Counts vowels in G2P output (~90-95%, depends on G2P accuracy)</li>
+                        </ul>
+                        <div class="note-box">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                            </svg>
+                            <p>
+                                <strong>No formal benchmark exists.</strong> These are estimates. The heuristic may fail
+                                on loanwords, compound words, and words without diacritics. For research, manually verify a sample.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tool-detail-card">
+                    <div class="tool-detail-header">
+                        <div class="tool-detail-title">
+                            <h4>POS Tagging</h4>
+                            <span class="tag">Stanza</span>
+                        </div>
+                        <span class="accuracy-badge high">97.4% accuracy</span>
+                    </div>
+                    <div class="tool-detail-body">
+                        <p><strong>Official benchmarks</strong> (Stanza v1.5.1 on UD v2.12):</p>
+                        <table class="benchmark-table">
+                            <tr>
+                                <th>Dataset</th>
+                                <th>Tokens</th>
+                                <th>UPOS</th>
+                                <th>Lemma</th>
+                            </tr>
+                            <tr>
+                                <td>Persian Seraji</td>
+                                <td>100%</td>
+                                <td>97.69%</td>
+                                <td>98.18%</td>
+                            </tr>
+                        </table>
+                        <p style="margin-top: 12px;">
+                            <strong>Output:</strong> Universal POS tags (UPOS) + Lemma<br>
+                            <strong>Treebank:</strong> UD Persian Seraji
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Japanese Tools -->
+            <div class="content-card">
+                <h3><img src="/static/images/japan-flag-icon.svg" alt="JP" class="flag-icon"> Japanese Tools</h3>
+
+                <div class="tool-detail-card">
+                    <div class="tool-detail-header">
+                        <div class="tool-detail-title">
+                            <h4>POS Tagging (Stanza)</h4>
+                            <span class="tag">Stanza</span>
+                        </div>
+                        <span class="accuracy-badge high">96-97% accuracy</span>
+                    </div>
+                    <div class="tool-detail-body">
+                        <p><strong>Official benchmarks</strong> (Stanza v1.5.1 on UD v2.12):</p>
+                        <table class="benchmark-table">
+                            <tr>
+                                <th>Dataset</th>
+                                <th>Tokens</th>
+                                <th>UPOS</th>
+                                <th>Lemma</th>
+                            </tr>
+                            <tr>
+                                <td>Japanese GSD</td>
+                                <td>97.37%</td>
+                                <td>96.38%</td>
+                                <td>96.02%</td>
+                            </tr>
+                            <tr>
+                                <td>Japanese GSDLUW</td>
+                                <td>96.32%</td>
+                                <td>95.10%</td>
+                                <td>94.67%</td>
+                            </tr>
+                        </table>
+                        <p style="margin-top: 12px;">
+                            <strong>Output:</strong> Universal POS tags (17 categories)<br>
+                            <strong>Best for:</strong> Cross-lingual research, UD compatibility
+                        </p>
+                    </div>
+                </div>
+
+                <div class="tool-detail-card">
+                    <div class="tool-detail-header">
+                        <div class="tool-detail-title">
+                            <h4>POS Tagging (UniDic)</h4>
+                            <span class="tag">Fugashi + UniDic</span>
+                        </div>
+                        <span class="accuracy-badge high">Widely used</span>
+                    </div>
+                    <div class="tool-detail-body">
+                        <p>
+                            MeCab morphological analyzer with UniDic dictionary developed by NINJAL
+                            (National Institute for Japanese Language and Linguistics).
+                        </p>
+                    
+                        <p style="margin-top: 12px;">
+                            <strong>Output:</strong> Detailed Japanese POS tags<br>
+                            <strong>Best for:</strong> Japanese linguistics, detailed morphological analysis
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recommendations -->
+            <div class="content-card">
+                <h3>Recommendations for Researchers</h3>
+                <ol style="color: var(--gray-300); line-height: 1.8;">
+                    <li><strong>Report tool versions</strong> in your papers (e.g., "spaCy v3.7", "Stanza v1.5.1")</li>
+                    <li><strong>Validate on your domain</strong> - accuracy varies by text type</li>
+                    <li><strong>Cite underlying tools</strong> - see each library's citation format on the <a href="/references">References</a> page</li>
+                    <li><strong>For Persian syllables:</strong> manually verify a sample since no formal benchmark exists</li>
+                </ol>
+            </div>
+        </div>
+    </main>
+
+{% include 'partials/footer.html' %}
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>

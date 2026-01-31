@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>References - lexprep</title>
+    <meta name="description" content="Libraries and references used in lexprep - linguistic data preparation toolkit.">
+    <link rel="icon" type="image/png" href="/static/images/favicon.png">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Animated Background -->
+    <div class="bg-gradient"></div>
+    <div class="bg-pattern"></div>
+    
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/" class="nav-logo">
+                <img src="/static/images/logo.png" alt="lexprep" class="logo-img">
+            </a>
+            <ul class="nav-menu">
+                <li><a href="/" class="nav-link">Tools</a></li>
+                <li><a href="/sampling" class="nav-link">Sampling</a></li>
+                <li><a href="/about" class="nav-link">About</a></li>
+                <li><a href="/references" class="nav-link active">References</a></li>
+                <li><a href="/accuracy" class="nav-link">Accuracy</a></li>
+                <li><a href="/author" class="nav-link">Author</a></li>
+                <li><a href="/contribute" class="nav-link">Contribute</a></li>
+            </ul>
+            <button type="button" class="nav-toggle" id="navToggle" aria-label="Toggle menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Page Header -->
+    <header class="page-header">
+        <div class="container">
+            <h1 class="page-title">
+                <span class="gradient-text">References</span> & Libraries
+            </h1>
+            <p class="page-subtitle">
+                The excellent open-source libraries that power lexprep
+            </p>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="content-section">
+        <div class="container">
+            <!-- Acknowledgment -->
+            <div class="content-card">
+                <h3>🙏 Acknowledgments</h3>
+                <p>
+                    lexprep is built on the shoulders of giants. We integrate and depend on several 
+                    excellent open-source libraries created by talented researchers and developers 
+                    around the world. This page acknowledges their work and provides proper attribution.
+                </p>
+                <p>
+                    We encourage you to visit their repositories, star their projects, and support their
+                    continued development.
+                </p>
+            </div>
+
+            <!-- English Libraries -->
+            <div class="content-card">
+                <h3><img src="/static/images/united-states-flag-icon.svg" alt="US" class="flag-icon"> English Libraries</h3>
+                <div class="library-grid">
+                    <div class="library-card">
+                        <h4>
+                            g2p-en
+                            <span class="tag">G2P</span>
+                        </h4>
+                        <p>
+                            Grapheme-to-phoneme conversion using the CMU Pronouncing Dictionary and a 
+                            neural network model for out-of-vocabulary words.
+                        </p>
+                        <p class="license">
+                            <strong>Authors:</strong> Kyubyong Park & Jongseok Kim (2019)<br>
+                            <strong>License:</strong> Apache License 2.0<br>
+                            <a href="https://github.com/Kyubyong/g2p" target="_blank">github.com/Kyubyong/g2p</a>
+                        </p>
+                    </div>
+                    <div class="library-card">
+                        <h4>
+                            pyphen
+                            <span class="tag">Syllables</span>
+                        </h4>
+                        <p>
+                            Pure Python hyphenation library based on TeX-compatible hyphenation dictionaries from LibreOffice (Hunspell format).
+                        </p>
+                        <p class="license">
+                            <strong>Authors:</strong> Kozea<br>
+                            <strong>License:</strong> LGPL/GPL/MPL<br>
+                            <a href="https://github.com/Kozea/Pyphen" target="_blank">github.com/Kozea/Pyphen</a>
+                        </p>
+                    </div>
+                    <div class="library-card">
+                        <h4>
+                            spaCy
+                            <span class="tag">POS</span>
+                        </h4>
+                        <p>
+                            Industrial-strength natural language processing library with pre-trained 
+                            models for many languages.
+                        </p>
+                        <p class="license">
+                            <strong>Authors:</strong> Explosion<br>
+                            <strong>License:</strong> MIT License<br>
+                            <a href="https://spacy.io/" target="_blank">spacy.io</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Persian Libraries -->
+            <div class="content-card">
+                <h3><img src="/static/images/iran-flag-icon.svg" alt="IR" class="flag-icon"> Persian Libraries</h3>
+                <div class="library-grid">
+                    <div class="library-card">
+                        <h4>
+                            PersianG2p
+                            <span class="tag">G2P</span>
+                        </h4>
+                        <p>
+                            Persian grapheme-to-phoneme conversion library. Handles Persian script 
+                            and produces phoneme-like Latin transcriptions.
+                        </p>
+                        <p class="license">
+                            <strong>Authors:</strong> Demetry Pascal (forked from AzamRabiee)<br>
+                            <strong>License:</strong> MIT License<br>
+                            <a href="https://github.com/PasaOpasen/PersianG2P" target="_blank">github.com/PasaOpasen/PersianG2P</a>
+                        </p>
+                    </div>
+                    <div class="library-card">
+                        <h4>
+                            Stanza
+                            <span class="tag">POS</span>
+                        </h4>
+                        <p>
+                            Stanford NLP Group's Python library for many human languages. Provides
+                            Universal Dependencies-style annotations including POS tagging and lemmatization.
+                        </p>
+                        <p class="license">
+                            <strong>Authors:</strong> Qi et al. (2020), Stanford NLP Group<br>
+                            <strong>License:</strong> Apache 2.0<br>
+                            <a href="https://stanfordnlp.github.io/stanza/" target="_blank">stanfordnlp.github.io/stanza</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Japanese Libraries -->
+            <div class="content-card">
+                <h3><img src="/static/images/japan-flag-icon.svg" alt="JP" class="flag-icon"> Japanese Libraries</h3>
+                <div class="library-grid">
+                    <div class="library-card">
+                        <h4>
+                            Stanza
+                            <span class="tag">POS</span>
+                        </h4>
+                        <p>
+                            Stanford NLP Group's Python library for many human languages. Provides 
+                            Universal Dependencies-style annotations.
+                        </p>
+                        <p class="license">
+                            <strong>Authors:</strong> Qi et al. (2020), Stanford NLP Group<br>
+                            <strong>License:</strong> Apache 2.0<br>
+                            <a href="https://stanfordnlp.github.io/stanza/" target="_blank">stanfordnlp.github.io/stanza</a>
+                        </p>
+                    </div>
+                    <div class="library-card">
+                        <h4>
+                            Fugashi
+                            <span class="tag">Tokenizer</span>
+                        </h4>
+                        <p>
+                            A Cython wrapper for MeCab, a Japanese morphological analyzer. Fast and 
+                            easy to use from Python.
+                        </p>
+                        <p class="license">
+                            <strong>Authors:</strong> Paul O'Leary McCann<br>
+                            <strong>License:</strong> MIT License<br>
+                            <a href="https://github.com/polm/fugashi" target="_blank">github.com/polm/fugashi</a>
+                        </p>
+                    </div>
+                    <div class="library-card">
+                        <h4>
+                            UniDic
+                            <span class="tag">Dictionary</span>
+                        </h4>
+                        <p>
+                            UniDic is a dictionary for morphological analysis of Japanese, developed by 
+                            NINJAL (National Institute for Japanese Language and Linguistics).
+                        </p>
+                        <p class="license">
+                            <strong>Authors:</strong> NINJAL<br>
+                            <strong>License:</strong> GPL/LGPL/BSD<br>
+                            <a href="https://clrd.ninjal.ac.jp/unidic/" target="_blank">clrd.ninjal.ac.jp/unidic</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+        
+
+            <!-- Citing lexprep -->
+            <div class="content-card">
+                <h3>📖 Citing lexprep</h3>
+                <p>
+                    If you use lexprep in your research, please cite it alongside the underlying libraries
+                    you used. This helps support the development of open-source research tools.
+                </p>
+                <div class="code-block">
+                    <code>
+Mazaherizaveh, S. (2026). lexprep: A toolkit for research<br>
+wordlist preparation. GitHub repository.<br>
+https://github.com/sajjad-mazaheri/lexprep
+                    </code>
+                </div>
+                <p style="margin-top: 16px; color: var(--gray-500); font-size: 0.9rem;">
+                    Please also cite the specific language libraries you used (spaCy, Stanza, etc.)
+                    as listed in the Academic References section above.
+                </p>
+            </div>
+
+            <!-- License Note -->
+            <div class="content-card">
+                <h3>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="vertical-align: middle; margin-right: 8px;">
+                        <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
+                    </svg>
+                    License Information
+                </h3>
+                <p>
+                    lexprep itself is released under the <strong>MIT License</strong>, which allows 
+                    free use, modification, and distribution.
+                </p>
+                <p>
+                    However, some underlying libraries have different licenses (GPL, LGPL, Apache, etc.). 
+                    If you redistribute lexprep or include it in other projects, please ensure compliance 
+                    with all applicable licenses.
+                </p>
+                <p>
+                    When in doubt, refer to the individual library repositories for their specific 
+                    license terms and requirements.
+                </p>
+            </div>
+        </div>
+    </main>
+
+{% include 'partials/footer.html' %}
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>

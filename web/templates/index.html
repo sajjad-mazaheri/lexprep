@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>lexprep - Linguistic Data Preparation Toolkit</title>
+    <meta name="description" content="Prepare wordlists for psycholinguistic research. G2P, syllable counting, POS tagging for Persian, English, and Japanese.">
+    <link rel="icon" type="image/png" href="/static/images/favicon.png">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Animated Background -->
+    <div class="bg-gradient"></div>
+    <div class="bg-pattern"></div>
+    
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/" class="nav-logo">
+                <img src="/static/images/logo.png" alt="lexprep" class="logo-img">
+            </a>
+            <ul class="nav-menu">
+                <li><a href="/" class="nav-link active">Tools</a></li>
+                <li><a href="/sampling" class="nav-link">Sampling</a></li>
+                <li><a href="/about" class="nav-link">About</a></li>
+                <li><a href="/references" class="nav-link">References</a></li>
+                <li><a href="/accuracy" class="nav-link">Accuracy</a></li>
+                <li><a href="/author" class="nav-link">Author</a></li>
+                <li><a href="/contribute" class="nav-link">Contribute</a></li>
+            </ul>
+            <button type="button" class="nav-toggle" id="navToggle" aria-label="Toggle menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-badge">Open-source Toolkit</div>
+                <p class="hero-tagline">Wordlist Processing For Research</p>
+                <h1 class="hero-title">
+                    <span class="typewriter-container">
+                        <span class="typewriter-word typewriter-lex" data-short="lex" data-full="lexical">lex</span><span class="typewriter-space"></span><span class="typewriter-word typewriter-prep gradient-text" data-short="prep" data-full="preparation">prep</span><span class="typewriter-cursor">|</span>
+                    </span>
+                </h1>
+                <p class="hero-subtitle">
+                    lexprep helps you prepare clean word lists for research. It can generate phonetic transcriptions (G2P), count syllables, and add POS tags for <br>
+                    <strong>Persian</strong>, <strong>English</strong>, and <strong>Japanese</strong>
+                </p>
+                <div class="hero-features">
+                    <div class="feature-tag" data-tooltip="Phonetic transcription for isolated words">
+                        G2P
+                    </div>
+                    <div class="feature-tag" data-tooltip="Orthographic and phonetic syllable counting">
+                        Syllables
+                    </div>
+                    <div class="feature-tag" data-tooltip="Part-of-speech annotation for wordlists">
+                        POS Tagging
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Tool Section -->
+    <main class="main-content">
+        <div class="container">
+            <div class="tool-card">
+                <div class="card-header">
+                    <h2>Process Your Wordlist</h2>
+                    <p>Select a language and tool, then upload your wordlist file</p>
+                </div>
+                
+                <div class="tool-form">
+                    <!-- Step 1: Language Selection -->
+                    <div class="form-section">
+                        <label class="form-label">
+                            <span class="step-number">1</span>
+                            Select Language
+                        </label>
+                        <div class="language-grid" id="languageGrid">
+                            <!-- Languages will be loaded dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Step 2: Tool Selection -->
+                    <div class="form-section">
+                        <label class="form-label">
+                            <span class="step-number">2</span>
+                            Select Tool
+                        </label>
+                        <div class="tool-grid" id="toolGrid">
+                            <div class="placeholder-message">
+                                Please select a language first
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 3: Upload File -->
+                    <div class="form-section">
+                        <label class="form-label">
+                            <span class="step-number">3</span>
+                            Upload Wordlist
+                            <span class="help-tooltip" data-tooltip="Supported formats: Excel (.xlsx), CSV, TXT. File must contain a column named 'word' or words in the first column. One word per row.">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/>
+                                </svg>
+                            </span>
+                        </label>
+                        <div class="file-upload-area" id="fileUploadArea">
+                            <input type="file" id="fileInput" accept=".xlsx,.xls,.csv,.tsv,.txt" hidden>
+                            <div class="upload-content">
+                                <div class="upload-icon">
+                                    <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor" opacity="0.5">
+                                        <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/>
+                                    </svg>
+                                </div>
+                                <p class="upload-text">Drag & drop your file here</p>
+                                <p class="upload-subtext">or click to browse</p>
+                                <p class="upload-formats">Excel, CSV, or TXT files</p>
+                            </div>
+                            <div class="upload-preview" id="uploadPreview" style="display: none;">
+                                <div class="file-info">
+                                    <span class="file-name" id="fileName"></span>
+                                    <span class="file-size" id="fileSize"></span>
+                                </div>
+                                <button type="button" class="remove-file" id="removeFile">&times;</button>
+                            </div>
+                        </div>
+                        <div class="word-column-select" id="wordColumnSelect" style="display: none;">
+                            <label>Select word column:</label>
+                            <select id="wordColumnDropdown" class="format-select"></select>
+                        </div>
+                    </div>
+
+                    <!-- Process Button -->
+                    <div class="button-group">
+                        <button class="btn btn-primary btn-process" id="processBtn" disabled>
+                            <span class="btn-icon">⚡</span>
+                            <span class="btn-text">Process File</span>
+                        </button>
+                        <button class="btn btn-secondary btn-cancel" id="cancelProcessBtn" style="display: none;">
+                            <span class="btn-icon">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                                </svg>
+                            </span>
+                            <span class="btn-text">Cancel</span>
+                        </button>
+                    </div>
+
+                    <!-- Accuracy Note for Persian Syllable Counter -->
+                    <div class="accuracy-note" id="accuracyNote" style="display: none;" dir="ltr">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="flex-shrink: 0;">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                        </svg>
+                        <span>This tool is under active development; accuracy may be limited</span>
+                    </div>
+
+                    <!-- Progress Indicator -->
+                    <div class="progress-container" id="progressContainer" style="display: none;">
+                        <div class="progress-header">
+                            <span class="progress-title">Processing your wordlist...</span>
+                            <span class="progress-percent" id="progressPercent">0%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill"></div>
+                        </div>
+                        <div class="progress-stages">
+                            <div class="progress-stage" id="stage1" data-stage="1">
+                                <span class="stage-icon">📄</span>
+                                <span class="stage-text">Reading file</span>
+                            </div>
+                            <div class="progress-stage" id="stage2" data-stage="2">
+                                <span class="stage-icon">⚙️</span>
+                                <span class="stage-text">Processing words</span>
+                            </div>
+                            <div class="progress-stage" id="stage3" data-stage="3">
+                                <span class="stage-icon">📊</span>
+                                <span class="stage-text">Generating output</span>
+                            </div>
+                            <div class="progress-stage" id="stage4" data-stage="4">
+                                <span class="stage-icon">✅</span>
+                                <span class="stage-text">Complete</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+{% include 'partials/footer.html' %}
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast">
+        <span class="toast-icon"></span>
+        <span class="toast-message"></span>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>

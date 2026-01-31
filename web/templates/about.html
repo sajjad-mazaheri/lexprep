@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About - lexprep</title>
+    <meta name="description" content="Learn about lexprep - a linguistic data preparation toolkit for psycholinguistic research.">
+    <link rel="icon" type="image/png" href="/static/images/favicon.png">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Animated Background -->
+    <div class="bg-gradient"></div>
+    <div class="bg-pattern"></div>
+    
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/" class="nav-logo">
+                <img src="/static/images/logo.png" alt="lexprep" class="logo-img">
+            </a>
+            <ul class="nav-menu">
+                <li><a href="/" class="nav-link">Tools</a></li>
+                <li><a href="/sampling" class="nav-link">Sampling</a></li>
+                <li><a href="/about" class="nav-link active">About</a></li>
+                <li><a href="/references" class="nav-link">References</a></li>
+                <li><a href="/accuracy" class="nav-link">Accuracy</a></li>
+                <li><a href="/author" class="nav-link">Author</a></li>
+                <li><a href="/contribute" class="nav-link">Contribute</a></li>
+            </ul>
+            <button type="button" class="nav-toggle" id="navToggle" aria-label="Toggle menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Page Header -->
+    <header class="page-header">
+        <div class="container">
+            <h1 class="page-title">
+                About <span class="gradient-text">lexprep</span>
+            </h1>
+            <p class="page-subtitle">
+                A toolkit designed for psycholinguistic research and linguistic data preparation
+            </p>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="content-section">
+        <div class="container">
+            <!-- What is lexprep -->
+            <div class="content-card">
+                <h3>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="vertical-align: middle; margin-right: 8px;">
+                        <path d="M20 2H4c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM7.5 16c-.83 0-1.5-.67-1.5-1.5S6.67 13 7.5 13s1.5.67 1.5 1.5S8.33 16 7.5 16zm0-5c-.83 0-1.5-.67-1.5-1.5S6.67 8 7.5 8 9 8.67 9 9.5 8.33 11 7.5 11zm4.5 5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm0-5c-.83 0-1.5-.67-1.5-1.5S11.17 8 12 8s1.5.67 1.5 1.5S12.83 11 12 11zm4.5 5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm0-5c-.83 0-1.5-.67-1.5-1.5S15.67 8 16.5 8s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/>
+                    </svg>
+                    What is lexprep?
+                </h3>
+                <p>
+                    <strong>lexprep</strong> is an open-source toolkit that processes wordlists for linguistic research.
+                    It provides essential NLP features specifically designed for researchers working with isolated words.
+                </p>
+                <p>
+                    Unlike traditional NLP libraries that focus on sentence and document analysis, lexprep
+                    treats each word independently which is perfect for experimental stimulus preparation, lexical
+                    database annotation, and controlled wordlist studies.
+                </p>
+            </div>
+
+            <!-- Features -->
+            <div class="content-card">
+                <h3>✨ Key Features</h3>
+                <ul>
+                    <li><strong>G2P Transcription</strong> — Convert words to phonetic representations (IPA, ARPAbet)</li>
+                    <li><strong>Syllable Counting</strong> — Count syllables using orthographic or phonetic methods</li>
+                    <li><strong>POS Tagging</strong> — Assign part-of-speech tags to isolated words</li>
+                    <li><strong>Stratified Sampling</strong> — Sample wordlists by frequency or other scores</li>
+                    <li><strong>Multi-format Support</strong> — Read and write Excel, CSV, TSV, and plain text files</li>
+                </ul>
+            </div>
+
+            <!-- Supported Languages -->
+            <div class="content-card">
+                <h3>🌍 Supported Languages</h3>
+                <div class="library-grid">
+                    <div class="library-card">
+                        <h4>
+                            <img src="/static/images/iran-flag-icon.svg" alt="IR" class="flag-icon"> Persian (فارسی)
+                            <span class="tag">fa</span>
+                        </h4>
+                        <p>G2P transcription, syllable counting (orthographic & phonetic), and POS tagging with Stanza</p>
+                    </div>
+                    <div class="library-card">
+                        <h4>
+                            <img src="/static/images/united-states-flag-icon.svg" alt="US" class="flag-icon"> English
+                            <span class="tag">en</span>
+                        </h4>
+                        <p>ARPAbet G2P, syllable counting with pyphen, and POS tagging with spaCy</p>
+                    </div>
+                    <div class="library-card">
+                        <h4>
+                            <img src="/static/images/japan-flag-icon.svg" alt="JP" class="flag-icon"> Japanese (日本語)
+                            <span class="tag">ja</span>
+                        </h4>
+                        <p>POS tagging with UniDic (detailed tags) or Stanza (universal tags)</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Who is this for -->
+            <div class="content-card">
+                <h3>👥 Who is this for?</h3>
+                <ul>
+                    <li><strong>Psycholinguists</strong> designing experimental stimuli and word lists</li>
+                    <li><strong>Linguists</strong> annotating lexical databases with phonetic and grammatical features</li>
+                    <li><strong>Researchers</strong> creating controlled word lists for reading research</li>
+                    <li><strong>Language scientists</strong> doing cross-linguistic comparisons</li>
+                    <li><strong>Students</strong> studying about linguistic analysis techniques</li>
+                </ul>
+            </div>
+
+            <!-- Why lexprep -->
+            <div class="content-card">
+                <h3>💡 Why lexprep?</h3>
+                <p>
+                    Most NLP tools (spaCy, Stanza, NLTK) are designed for <strong>text processing</strong> like analyzing 
+                    sentences, documents, and running text. They work great for named entity recognition, dependency 
+                    parsing, and document classification.
+                </p>
+                <p>
+                    But psycholinguistic research often involves <strong>wordlists</strong>: spreadsheets of isolated 
+                    words that need phonetic transcription, syllable counts, or POS tags. Standard NLP tools can 
+                    struggle with this because they expect sentence context.
+                </p>
+                <p>
+                    <strong>lexprep bridges this gap</strong> by providing wordlist processing with a
+                    unified interface across languages. Use the visual web interface for quick processing or
+                    the command-line tools for batch automation to make it easy to prepare research materials
+                    without writing custom scripts for each task.
+                </p>
+            </div>
+
+            <!-- Open Source -->
+            <div class="content-card">
+                <h3>📖 Open Source</h3>
+                <p>
+                    lexprep is released under the <strong>MIT License</strong>, making it free to use, modify, 
+                    and distribute for both academic and commercial purposes. The project welcomes contributions 
+                    from the community.
+                </p>
+                <p>
+                    The source code is available on 
+                    <a href="https://github.com/sajjad-mazaheri/lexprep" target="_blank">GitHub</a>.
+                </p>
+            </div>
+        </div>
+    </main>
+
+{% include 'partials/footer.html' %}
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>

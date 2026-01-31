@@ -1,0 +1,83 @@
+[build-system]
+requires = ["hatchling>=1.24"]
+build-backend = "hatchling.build"
+
+[project]
+name = "lexprep"
+version = "1.0.0"
+description = "Toolkit for preparing wordlists (G2P, syllables, POS, stratified sampling) with a simple CLI."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [
+  { name = "Sajjad Mazaherizaveh", email = "sajjadmazaherizaveh@gmail.com" }
+]
+keywords = ["nlp", "linguistics", "wordlist", "persian", "japanese", "english", "g2p", "pos-tagging", "syllabification"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Text Processing :: Linguistic",
+    "Topic :: Scientific/Engineering",
+]
+
+dependencies = [
+  "pandas>=2.0",
+  "openpyxl>=3.1",
+  "typer>=0.12",
+  "rich>=13.7",
+  "python-dotenv>=1.0"
+]
+
+[project.optional-dependencies]
+fa = [
+  "stanza>=1.8",
+  "PersianG2p>=0.1.5"
+]
+ja = [
+  "stanza>=1.8",
+  "fugashi>=1.3",
+  "unidic-lite>=1.0"
+]
+en = [
+  "g2p-en>=2.1",
+  "pyphen>=0.14",
+  "spacy>=3.7"
+]
+dev = [
+  "pytest>=8.0",
+  "pytest-cov>=4.0",
+  "ruff>=0.6",
+  "mypy>=1.10"
+]
+
+[project.scripts]
+lexprep = "lexprep.cli:app"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/lexprep"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W"]
+ignore = []
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]

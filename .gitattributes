@@ -1,0 +1,46 @@
+# Set default behavior to automatically normalize line endings
+* text=auto
+
+# Python files
+*.py text eol=lf
+*.pyi text eol=lf
+
+# Config files
+*.toml text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.json text eol=lf
+*.ini text eol=lf
+*.cfg text eol=lf
+
+# Shell scripts
+*.sh text eol=lf
+*.bash text eol=lf
+
+# Windows scripts
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# Documentation
+*.md text eol=lf
+*.txt text eol=lf
+LICENSE text eol=lf
+README text eol=lf
+
+# Data files
+*.csv text eol=lf
+*.tsv text eol=lf
+
+# Binary files
+*.xlsx binary
+*.xls binary
+*.model binary
+*.pkl binary
+*.pickle binary
+*.pyc binary
+*.pyd binary
+*.pyo binary
+*.so binary
+*.dll binary
+*.dylib binary
