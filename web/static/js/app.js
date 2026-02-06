@@ -445,6 +445,16 @@ async function handleFileSelect(file) {
 
     state.uploadedFile = file;
 
+    // GA4: track file upload
+    if (typeof gtag === 'function') {
+        gtag('event', 'file_uploaded', {
+            file_size: file.size,
+            file_type: ext,
+            language: state.selectedLanguage || undefined,
+            analysis_type: state.selectedTool || undefined
+        });
+    }
+
     // Update UI
     elements.fileUploadArea.classList.add('has-file');
     const uploadContent = elements.fileUploadArea.querySelector('.upload-content');
@@ -681,6 +691,16 @@ async function handleStratifiedFile() {
     stratFilePreview.style.display = 'flex';
     stratUploadContent.style.display = 'none';
     stratFileArea.classList.add('has-file');
+
+    // GA4: track sampling file upload
+    if (typeof gtag === 'function') {
+        const ext = '.' + file.name.split('.').pop().toLowerCase();
+        gtag('event', 'file_uploaded', {
+            file_size: file.size,
+            file_type: ext,
+            context: 'sampling'
+        });
+    }
 
     // Parse file to get columns
     const formData = new FormData();
@@ -932,6 +952,14 @@ function initSamplingUI() {
             a.remove();
             window.URL.revokeObjectURL(url);
 
+            // GA4: track wordlist generation
+            if (typeof gtag === 'function') {
+                const nTotal = document.getElementById('nTotal')?.value || document.getElementById('nTotalCustom')?.value || '0';
+                gtag('event', 'wordlist_generated', {
+                    word_count: parseInt(nTotal) || 0
+                });
+            }
+
         } catch (error) {
             alert('Error: ' + error.message);
         } finally {
@@ -1158,6 +1186,7 @@ async function processFile() {
     elements.processBtn.classList.add('loading');
     elements.processBtn.disabled = true;
     showProgress();
+    const processStartTime = Date.now();
 
     try {
         // Stage 1: Reading file
@@ -1252,6 +1281,19 @@ async function processFile() {
         // Trigger download
         downloadBlob(blob, filename);
 
+        // GA4: track successful analysis
+        if (typeof gtag === 'function') {
+            const wordCount = parseInt(response.headers.get('X-Word-Count')) || 0;
+            const durationSec = Math.round((Date.now() - processStartTime) / 1000);
+            gtag('event', 'analysis_run', {
+                analysis_type: state.selectedTool,
+                language: state.selectedLanguage,
+                item_count: wordCount,
+                duration_sec: durationSec,
+                file_size: state.uploadedFile?.size || 0
+            });
+        }
+
         showToast('Processing complete! Download started.', 'success');
 
         // Hide progress after a moment
@@ -1263,6 +1305,16 @@ async function processFile() {
         console.error('Processing error:', error);
         showToast(error.message || 'Processing failed. Please try again.', 'error');
         hideProgress();
+
+        // GA4: track error
+        if (typeof gtag === 'function') {
+            const errorType = error.name === 'AbortError' ? 'timeout' : (error.message?.includes('validation') ? 'validation' : 'server');
+            gtag('event', 'error_occurred', {
+                error_type: errorType,
+                analysis_type: state.selectedTool,
+                language: state.selectedLanguage
+            });
+        }
     } finally {
         state.isProcessing = false;
         elements.processBtn.classList.remove('loading');
@@ -1297,6 +1349,7 @@ async function processFileAsync() {
     }
     showProgress();
     updateProgress(5, 1);
+    const asyncStartTime = Date.now();
 
     try {
         const formData = new FormData();
@@ -1320,12 +1373,22 @@ async function processFileAsync() {
         state.currentJobId = job_id;
 
         // Poll for job completion
-        await pollJobStatus(job_id);
+        await pollJobStatus(job_id, asyncStartTime);
 
     } catch (error) {
         console.error('Async processing error:', error);
         showToast(error.message || 'Processing failed', 'error');
         hideProgress();
+
+        // GA4: track error
+        if (typeof gtag === 'function') {
+            const errorType = error.message?.includes('timed out') ? 'timeout' : 'server';
+            gtag('event', 'error_occurred', {
+                error_type: errorType,
+                analysis_type: state.selectedTool,
+                language: state.selectedLanguage
+            });
+        }
     } finally {
         state.isProcessing = false;
         state.currentJobId = null;
@@ -1336,7 +1399,7 @@ async function processFileAsync() {
     }
 }
 
-async function pollJobStatus(jobId) {
+async function pollJobStatus(jobId, startTime) {
     const maxAttempts = 360; // 30 minutes max (5 sec intervals)
     let attempts = 0;
 
@@ -1368,6 +1431,20 @@ async function pollJobStatus(jobId) {
                 }
 
                 downloadBlob(blob, filename);
+
+                // GA4: track successful async analysis
+                if (typeof gtag === 'function') {
+                    const wordCount = parseInt(downloadResponse.headers.get('X-Word-Count')) || 0;
+                    const durationSec = Math.round((Date.now() - startTime) / 1000);
+                    gtag('event', 'analysis_run', {
+                        analysis_type: state.selectedTool,
+                        language: state.selectedLanguage,
+                        item_count: wordCount,
+                        duration_sec: durationSec,
+                        file_size: state.uploadedFile?.size || 0
+                    });
+                }
+
                 showToast('Processing complete! Download started.', 'success');
 
                 setTimeout(() => hideProgress(), 1500);

@@ -760,12 +760,15 @@ def process_file():
 
         total_time = time.time() - start_time
         print(f"[API] Complete in {total_time:.2f}s", file=sys.stderr, flush=True)
-        return send_file(
+        response = send_file(
             output,
             mimetype=mimetype,
             as_attachment=True,
             download_name=out_filename
         )
+        response.headers['X-Word-Count'] = str(len(words))
+        response.headers['Access-Control-Expose-Headers'] = 'X-Word-Count, Content-Disposition'
+        return response
 
     except ImportError as e:
         print(f"[API] ImportError: {e}", file=sys.stderr, flush=True)
@@ -912,7 +915,8 @@ def _process_file_background(job_id, file_bytes, filename, language, tool, word_
             _jobs[job_id]['result'] = {
                 'data': output.getvalue(),
                 'mimetype': mimetype,
-                'filename': out_filename
+                'filename': out_filename,
+                'word_count': len(words)
             }
 
     except Exception as e:
@@ -953,12 +957,15 @@ def download_job_result(job_id):
         result = job['result']
         output = io.BytesIO(result['data'])
 
-        return send_file(
+        response = send_file(
             output,
             mimetype=result['mimetype'],
             as_attachment=True,
             download_name=result['filename']
         )
+        response.headers['X-Word-Count'] = str(result.get('word_count', 0))
+        response.headers['Access-Control-Expose-Headers'] = 'X-Word-Count, Content-Disposition'
+        return response
 
 
 def process_words_batch(words, language, tool):
