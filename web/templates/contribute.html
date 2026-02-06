@@ -1,70 +1,22 @@
-<!DOCTYPE html>
-<html lang="en" dir="ltr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Contribute - lexprep</title>
-    <meta name="description" content="Join the lexprep community and contribute to linguistic research tools.">
-    <link rel="icon" type="image/png" href="/static/images/favicon.png">
-    <link rel="stylesheet" href="/static/css/style.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-</head>
-<body>
-    <!-- Animated Background -->
-    <div class="bg-gradient"></div>
-    <div class="bg-pattern"></div>
-    
-    <!-- Navigation -->
-    <nav class="navbar">
-        <div class="nav-container">
-            <a href="/" class="nav-logo">
-                <img src="/static/images/logo.png" alt="lexprep" class="logo-img">
-            </a>
-            <ul class="nav-menu">
-                <li><a href="/" class="nav-link">Tools</a></li>
-                <li><a href="/sampling" class="nav-link">Sampling</a></li>
-                <li><a href="/about" class="nav-link">About</a></li>
-                <li><a href="/references" class="nav-link">References</a></li>
-                <li><a href="/accuracy" class="nav-link">Accuracy</a></li>
-                <li><a href="/author" class="nav-link">Author</a></li>
-                <li><a href="/contribute" class="nav-link active">Contribute</a></li>
-            </ul>
-            <button type="button" class="nav-toggle" id="navToggle" aria-label="Toggle menu">
-                <span></span>
-                <span></span>
-                <span></span>
-            </button>
-        </div>
-    </nav>
+{% extends 'base.html' %}
 
-    <!-- Page Header -->
-    <header class="page-header">
-        <div class="container">
-            <h1 class="page-title">
-                <span class="gradient-text">Contribute</span> to lexprep
-            </h1>
-            <p class="page-subtitle">
-                Help us build better tools for linguistic research
-            </p>
-        </div>
-    </header>
+{% block title %}Contribute - lexprep{% endblock %}
+{% block description %}Join the lexprep community and contribute to linguistic research tools.{% endblock %}
 
-    <!-- Main Content -->
+{% block page_content %}
     <main class="content-section">
         <div class="container">
             <!-- Welcome -->
             <div class="content-card">
                 <h3>🤝 Join the Community</h3>
                 <p>
-                    lexprep is an open-source project, and we welcome contributions from everyone! 
-                    Whether you're a linguist, a developer, or both, there are many ways to help 
+                    lexprep is an open-source project, and we welcome contributions from everyone!
+                    Whether you're a linguist, a developer, or both, there are many ways to help
                     improve the toolkit and make linguistic research more accessible.
                 </p>
                 <p>
-                    The goal of lexprep is to support as many languages as possible, making it easier 
-                    for researchers worldwide to prepare wordlists for their studies. Your contribution 
+                    The goal of lexprep is to support as many languages as possible, making it easier
+                    for researchers worldwide to prepare wordlists for their studies. Your contribution
                     can make a real difference in the research community.
                 </p>
             </div>
@@ -72,10 +24,10 @@
             <!-- Ways to Contribute -->
             <div class="content-card">
                 <h3>🌟 Ways to Contribute</h3>
-                
+
                 <h4 style="margin-top: 24px; color: var(--gray-200);">🌍 Add a New Language</h4>
                 <p>
-                    This is the most impactful contribution! If you know a language that's not yet 
+                    This is the most impactful contribution! If you know a language that's not yet
                     supported, you can help add:
                 </p>
                 <ul>
@@ -83,7 +35,7 @@
                     <li>Syllable counting algorithms</li>
                     <li>POS tagging integration</li>
                 </ul>
-                
+
                 <h4 style="margin-top: 24px; color: var(--gray-200);">🐛 Report Bugs</h4>
                 <p>
                     Found a bug or unexpected behavior? Open an issue on GitHub with:
@@ -94,7 +46,7 @@
                     <li>Minimal reproducible example</li>
                     <li>Expected vs. actual behavior</li>
                 </ul>
-                
+
                 <h4 style="margin-top: 24px; color: var(--gray-200);">📖 Improve Documentation</h4>
                 <p>
                     Good documentation is crucial. You can help by:
@@ -105,10 +57,10 @@
                     <li>Translating documentation to other languages</li>
                     <li>Writing tutorials for specific use cases</li>
                 </ul>
-                
+
                 <h4 style="margin-top: 24px; color: var(--gray-200);">✨ Suggest Features</h4>
                 <p>
-                    Have an idea for a new feature? We'd love to hear it! Open an issue to discuss 
+                    Have an idea for a new feature? We'd love to hear it! Open an issue to discuss
                     your suggestion before implementing it.
                 </p>
             </div>
@@ -129,7 +81,7 @@
             <div class="content-card">
                 <h3>🎯 Languages We'd Love to Support</h3>
                 <p>
-                    We're especially interested in adding support for these languages. If you have 
+                    We're especially interested in adding support for these languages. If you have
                     expertise in any of them, your contribution would be invaluable:
                 </p>
                 <div class="library-grid">
@@ -186,9 +138,4 @@
             </div>
         </div>
     </main>
-
-{% include 'partials/footer.html' %}
-
-    <script src="/static/js/app.js"></script>
-</body>
-</html>
+{% endblock %}

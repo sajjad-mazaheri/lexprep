@@ -1,53 +1,9 @@
-<!DOCTYPE html>
-<html lang="en" dir="ltr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Panel - lexprep</title>
-    <meta name="robots" content="noindex, nofollow">
-    <link rel="icon" type="image/png" href="/static/images/favicon.png">
-    <link rel="stylesheet" href="/static/css/style.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-</head>
-<body>
-    <!-- Animated Background -->
-    <div class="bg-gradient"></div>
-    <div class="bg-pattern"></div>
-    
-    <!-- Navigation -->
-    <nav class="navbar">
-        <div class="nav-container">
-            <a href="/" class="nav-logo">
-                <img src="/static/images/logo.png" alt="lexprep" class="logo-img">
-            </a>
-            <ul class="nav-menu">
-                <li><a href="/" class="nav-link">Tools</a></li>
-                <li><a href="/sampling" class="nav-link">Sampling</a></li>
-                <li><a href="/about" class="nav-link">About</a></li>
-                <li><a href="/references" class="nav-link">References</a></li>
-                <li><a href="/author" class="nav-link">Author</a></li>
-                <li><a href="/contribute" class="nav-link">Contribute</a></li>
-            </ul>
-            <button type="button" class="nav-toggle" id="navToggle" aria-label="Toggle menu">
-                <span></span>
-                <span></span>
-                <span></span>
-            </button>
-        </div>
-    </nav>
+{% extends 'base.html' %}
 
-    <!-- Admin Header -->
-    <header class="admin-header">
-        <div class="container">
-            <h1 class="page-title">
-                <span class="gradient-text">Admin</span> Panel
-            </h1>
-        </div>
-    </header>
+{% block title %}Admin Panel - lexprep{% endblock %}
+{% block extra_meta %}<meta name="robots" content="noindex, nofollow">{% endblock %}
 
-    <!-- Main Content -->
+{% block page_content %}
     <main class="content-section">
         <div class="container">
             <!-- Login Section (shown when not authenticated) -->
@@ -56,10 +12,10 @@
                 <p style="margin-bottom: 24px; color: var(--gray-400);">
                     Enter your admin secret to view analytics.
                 </p>
-                <input 
-                    type="password" 
-                    id="adminSecret" 
-                    class="admin-input" 
+                <input
+                    type="password"
+                    id="adminSecret"
+                    class="admin-input"
                     placeholder="Enter admin secret"
                     autocomplete="off"
                 >
@@ -91,13 +47,33 @@
                     </div>
                 </div>
 
+                <!-- Google Analytics -->
+                <div class="content-card">
+                    <h3>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="vertical-align: middle; margin-right: 8px;">
+                            <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6zm0-10c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4z"/>
+                        </svg>
+                        Google Analytics
+                    </h3>
+                    <p style="color: var(--gray-400); margin-bottom: 16px;">
+                        Visitor analytics (sessions, demographics, traffic sources) are tracked via GA4.
+                        Tool-specific usage data below is tracked internally.
+                    </p>
+                    <a href="https://analytics.google.com/analytics/web/#/p/G-KH8H8BJF9C" target="_blank" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 8px;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/>
+                        </svg>
+                        Open GA4 Dashboard
+                    </a>
+                </div>
+
                 <!-- Page Views by Page -->
                 <div class="content-card">
                     <h3>
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="vertical-align: middle; margin-right: 8px;">
                             <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
                         </svg>
-                        Page Views
+                        Page Views (Internal)
                     </h3>
                     <div class="results-table-wrapper">
                         <table class="results-table">
@@ -119,7 +95,7 @@
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="vertical-align: middle; margin-right: 8px;">
                             <path d="M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6 6 9 1.6 4.7C.4 7.1.9 10.1 2.9 12.1c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.5-.4.5-1.1.1-1.4z"/>
                         </svg>
-                        Tool Usage
+                        Tool Usage (Internal)
                     </h3>
                     <div class="results-table-wrapper">
                         <table class="results-table">
@@ -143,7 +119,7 @@
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="vertical-align: middle; margin-right: 8px;">
                             <path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/>
                         </svg>
-                        Daily Activity (Last 7 Days)
+                        Daily Activity - Internal (Last 7 Days)
                     </h3>
                     <div class="results-table-wrapper">
                         <table class="results-table">
@@ -173,16 +149,17 @@
             </div>
         </div>
     </main>
+{% endblock %}
 
-{% include 'partials/footer.html' %}
-
+{% block toast %}
     <!-- Toast Notification -->
     <div class="toast" id="toast">
         <span class="toast-icon"></span>
         <span class="toast-message"></span>
     </div>
+{% endblock %}
 
-    <script src="/static/js/app.js"></script>
+{% block extra_scripts %}
     <script>
         // Admin Panel Logic
         const adminState = {
@@ -243,7 +220,7 @@
         async function loadDashboard() {
             try {
                 const data = await window.lexprep.loginAdmin(adminState.secret);
-                
+
                 // Show dashboard
                 adminElements.loginSection.style.display = 'none';
                 adminElements.dashboardSection.style.display = 'block';
@@ -251,11 +228,11 @@
                 // Update stats
                 adminElements.totalViews.textContent = formatNumber(data.total_views);
                 adminElements.uniqueVisitors.textContent = formatNumber(data.unique_visitors);
-                
+
                 // Calculate total words processed
                 const totalWords = data.tool_stats.reduce((sum, stat) => sum + (stat.total_words || 0), 0);
                 adminElements.totalProcessed.textContent = formatNumber(totalWords);
-                
+
                 // Calculate total tool usage
                 const totalUsage = data.tool_stats.reduce((sum, stat) => sum + stat.usage_count, 0);
                 adminElements.toolUsage.textContent = formatNumber(totalUsage);
@@ -314,5 +291,4 @@
             return div.innerHTML;
         }
     </script>
-</body>
-</html>
+{% endblock %}

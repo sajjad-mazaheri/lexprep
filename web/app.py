@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify, send_file, render_template
+from markupsafe import Markup
 from flask_cors import CORS
 import pandas as pd
 import io
@@ -11,6 +12,9 @@ from functools import wraps
 import hashlib
 import hmac
 import sqlite3
+import logging
+
+logger = logging.getLogger(__name__)
 
 # Load environment variables 
 try:
@@ -181,6 +185,15 @@ def init_db():
     conn.close()
 
 
+def get_client_ip():
+    """Get client IP, checking X-Forwarded-For for proxied requests."""
+    forwarded = request.headers.get('X-Forwarded-For', '')
+    if forwarded:
+        # X-Forwarded-For can be a comma-separated list; first is the real client
+        return forwarded.split(',')[0].strip()
+    return request.remote_addr or 'unknown'
+
+
 def hash_ip(ip):
     """Hash IP for privacy"""
     return hashlib.sha256(ip.encode()).hexdigest()[:16]
@@ -189,7 +202,7 @@ def hash_ip(ip):
 def log_page_view(page):
     """Log a page view"""
     try:
-        ip = request.remote_addr or 'unknown'
+        ip = get_client_ip()
         ua = request.headers.get('User-Agent', '')[:200]
         conn = sqlite3.connect(DB_PATH)
         c = conn.cursor()
@@ -198,13 +211,13 @@ def log_page_view(page):
         conn.commit()
         conn.close()
     except Exception:
-        pass
+        logger.exception('Failed to log page view for page: %s', page)
 
 
 def log_tool_usage(language, tool, word_count):
     """Log tool usage"""
     try:
-        ip = request.remote_addr or 'unknown'
+        ip = get_client_ip()
         conn = sqlite3.connect(DB_PATH)
         c = conn.cursor()
         c.execute('INSERT INTO tool_usage (language, tool, word_count, ip_hash) VALUES (?, ?, ?, ?)',
@@ -212,7 +225,7 @@ def log_tool_usage(language, tool, word_count):
         conn.commit()
         conn.close()
     except Exception:
-        pass
+        logger.exception('Failed to log tool usage: %s/%s', language, tool)
 
 
 def admin_required(f):
@@ -244,50 +257,63 @@ init_db()
 @app.route('/')
 def index():
     log_page_view('home')
-    return render_template('index.html')
+    return render_template('index.html', active_page='home')
 
 
 @app.route('/about')
 def about():
     log_page_view('about')
-    return render_template('about.html')
+    return render_template('about.html', active_page='about',
+        page_title=Markup('About <span class="gradient-text">lexprep</span>'),
+        page_subtitle='A toolkit designed for psycholinguistic research and linguistic data preparation')
 
 
 @app.route('/author')
 def author():
     log_page_view('author')
-    return render_template('author.html')
+    return render_template('author.html', active_page='author',
+        page_title=Markup('Meet the <span class="gradient-text">Author</span>'),
+        page_subtitle='The person behind lexprep')
 
 
 @app.route('/contribute')
 def contribute():
     log_page_view('contribute')
-    return render_template('contribute.html')
+    return render_template('contribute.html', active_page='contribute',
+        page_title=Markup('<span class="gradient-text">Contribute</span> to lexprep'),
+        page_subtitle='Help us build better tools for linguistic research')
 
 
 @app.route('/references')
 def references():
     log_page_view('references')
-    return render_template('references.html')
+    return render_template('references.html', active_page='references',
+        page_title=Markup('<span class="gradient-text">References</span> &amp; Libraries'),
+        page_subtitle='The excellent open-source libraries that power lexprep')
 
 
 @app.route('/accuracy')
 def accuracy():
     log_page_view('accuracy')
-    return render_template('accuracy.html')
+    return render_template('accuracy.html', active_page='accuracy',
+        page_title=Markup('Tool <span class="gradient-text">Accuracy</span>'),
+        page_subtitle='Evaluation metrics and benchmarks for each tool')
 
 
 @app.route('/sampling')
 def sampling():
     log_page_view('sampling')
-    return render_template('sampling.html')
+    return render_template('sampling.html', active_page='sampling',
+        page_title=Markup('<span class="gradient-text">Sampling Tools</span>'),
+        page_subtitle='Statistical sampling methods for experimental stimulus selection')
 
 
 @app.route('/admin')
 def admin():
     if not ADMIN_ENABLED:
         return render_template('admin_disabled.html'), 403
-    return render_template('admin.html')
+    return render_template('admin.html', active_page='admin',
+        page_title=Markup('<span class="gradient-text">Admin</span> Panel'))
 
 
 # ============== API Routes ==============
@@ -1173,6 +1199,7 @@ def track_event():
         log_page_view(page)
         return jsonify({'status': 'ok'})
     except Exception:
+        logger.exception('Failed to track event')
         return jsonify({'status': 'ok'})
 
 

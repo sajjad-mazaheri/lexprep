@@ -1,44 +1,9 @@
-<!DOCTYPE html>
-<html lang="en" dir="ltr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>lexprep - Linguistic Data Preparation Toolkit</title>
-    <meta name="description" content="Prepare wordlists for psycholinguistic research. G2P, syllable counting, POS tagging for Persian, English, and Japanese.">
-    <link rel="icon" type="image/png" href="/static/images/favicon.png">
-    <link rel="stylesheet" href="/static/css/style.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-</head>
-<body>
-    <!-- Animated Background -->
-    <div class="bg-gradient"></div>
-    <div class="bg-pattern"></div>
-    
-    <!-- Navigation -->
-    <nav class="navbar">
-        <div class="nav-container">
-            <a href="/" class="nav-logo">
-                <img src="/static/images/logo.png" alt="lexprep" class="logo-img">
-            </a>
-            <ul class="nav-menu">
-                <li><a href="/" class="nav-link active">Tools</a></li>
-                <li><a href="/sampling" class="nav-link">Sampling</a></li>
-                <li><a href="/about" class="nav-link">About</a></li>
-                <li><a href="/references" class="nav-link">References</a></li>
-                <li><a href="/accuracy" class="nav-link">Accuracy</a></li>
-                <li><a href="/author" class="nav-link">Author</a></li>
-                <li><a href="/contribute" class="nav-link">Contribute</a></li>
-            </ul>
-            <button type="button" class="nav-toggle" id="navToggle" aria-label="Toggle menu">
-                <span></span>
-                <span></span>
-                <span></span>
-            </button>
-        </div>
-    </nav>
+{% extends 'base.html' %}
 
+{% block title %}lexprep - Linguistic Data Preparation Toolkit{% endblock %}
+{% block description %}Prepare wordlists for psycholinguistic research. G2P, syllable counting, POS tagging for Persian, English, and Japanese.{% endblock %}
+
+{% block content %}
     <!-- Hero Section -->
     <header class="hero">
         <div class="container">
@@ -77,7 +42,7 @@
                     <h2>Process Your Wordlist</h2>
                     <p>Select a language and tool, then upload your wordlist file</p>
                 </div>
-                
+
                 <div class="tool-form">
                     <!-- Step 1: Language Selection -->
                     <div class="form-section">
@@ -196,15 +161,12 @@
             </div>
         </div>
     </main>
+{% endblock %}
 
-{% include 'partials/footer.html' %}
-
+{% block toast %}
     <!-- Toast Notification -->
     <div class="toast" id="toast">
         <span class="toast-icon"></span>
         <span class="toast-message"></span>
     </div>
-
-    <script src="/static/js/app.js"></script>
-</body>
-</html>
+{% endblock %}

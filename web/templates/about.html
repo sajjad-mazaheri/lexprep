@@ -1,57 +1,9 @@
-<!DOCTYPE html>
-<html lang="en" dir="ltr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>About - lexprep</title>
-    <meta name="description" content="Learn about lexprep - a linguistic data preparation toolkit for psycholinguistic research.">
-    <link rel="icon" type="image/png" href="/static/images/favicon.png">
-    <link rel="stylesheet" href="/static/css/style.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-</head>
-<body>
-    <!-- Animated Background -->
-    <div class="bg-gradient"></div>
-    <div class="bg-pattern"></div>
-    
-    <!-- Navigation -->
-    <nav class="navbar">
-        <div class="nav-container">
-            <a href="/" class="nav-logo">
-                <img src="/static/images/logo.png" alt="lexprep" class="logo-img">
-            </a>
-            <ul class="nav-menu">
-                <li><a href="/" class="nav-link">Tools</a></li>
-                <li><a href="/sampling" class="nav-link">Sampling</a></li>
-                <li><a href="/about" class="nav-link active">About</a></li>
-                <li><a href="/references" class="nav-link">References</a></li>
-                <li><a href="/accuracy" class="nav-link">Accuracy</a></li>
-                <li><a href="/author" class="nav-link">Author</a></li>
-                <li><a href="/contribute" class="nav-link">Contribute</a></li>
-            </ul>
-            <button type="button" class="nav-toggle" id="navToggle" aria-label="Toggle menu">
-                <span></span>
-                <span></span>
-                <span></span>
-            </button>
-        </div>
-    </nav>
+{% extends 'base.html' %}
 
-    <!-- Page Header -->
-    <header class="page-header">
-        <div class="container">
-            <h1 class="page-title">
-                About <span class="gradient-text">lexprep</span>
-            </h1>
-            <p class="page-subtitle">
-                A toolkit designed for psycholinguistic research and linguistic data preparation
-            </p>
-        </div>
-    </header>
+{% block title %}About - lexprep{% endblock %}
+{% block description %}Learn about lexprep - a linguistic data preparation toolkit for psycholinguistic research.{% endblock %}
 
-    <!-- Main Content -->
+{% block page_content %}
     <main class="content-section">
         <div class="container">
             <!-- What is lexprep -->
@@ -129,13 +81,13 @@
             <div class="content-card">
                 <h3>💡 Why lexprep?</h3>
                 <p>
-                    Most NLP tools (spaCy, Stanza, NLTK) are designed for <strong>text processing</strong> like analyzing 
-                    sentences, documents, and running text. They work great for named entity recognition, dependency 
+                    Most NLP tools (spaCy, Stanza, NLTK) are designed for <strong>text processing</strong> like analyzing
+                    sentences, documents, and running text. They work great for named entity recognition, dependency
                     parsing, and document classification.
                 </p>
                 <p>
-                    But psycholinguistic research often involves <strong>wordlists</strong>: spreadsheets of isolated 
-                    words that need phonetic transcription, syllable counts, or POS tags. Standard NLP tools can 
+                    But psycholinguistic research often involves <strong>wordlists</strong>: spreadsheets of isolated
+                    words that need phonetic transcription, syllable counts, or POS tags. Standard NLP tools can
                     struggle with this because they expect sentence context.
                 </p>
                 <p>
@@ -150,20 +102,15 @@
             <div class="content-card">
                 <h3>📖 Open Source</h3>
                 <p>
-                    lexprep is released under the <strong>MIT License</strong>, making it free to use, modify, 
-                    and distribute for both academic and commercial purposes. The project welcomes contributions 
+                    lexprep is released under the <strong>MIT License</strong>, making it free to use, modify,
+                    and distribute for both academic and commercial purposes. The project welcomes contributions
                     from the community.
                 </p>
                 <p>
-                    The source code is available on 
+                    The source code is available on
                     <a href="https://github.com/sajjad-mazaheri/lexprep" target="_blank">GitHub</a>.
                 </p>
             </div>
         </div>
     </main>
-
-{% include 'partials/footer.html' %}
-
-    <script src="/static/js/app.js"></script>
-</body>
-</html>
+{% endblock %}

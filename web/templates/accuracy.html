@@ -1,57 +1,9 @@
-<!DOCTYPE html>
-<html lang="en" dir="ltr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Accuracy - lexprep</title>
-    <meta name="description" content="Tool accuracy benchmarks and evaluation metrics for lexprep - linguistic data preparation toolkit.">
-    <link rel="icon" type="image/png" href="/static/images/favicon.png">
-    <link rel="stylesheet" href="/static/css/style.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-</head>
-<body>
-    <!-- Animated Background -->
-    <div class="bg-gradient"></div>
-    <div class="bg-pattern"></div>
+{% extends 'base.html' %}
 
-    <!-- Navigation -->
-    <nav class="navbar">
-        <div class="nav-container">
-            <a href="/" class="nav-logo">
-                <img src="/static/images/logo.png" alt="lexprep" class="logo-img">
-            </a>
-            <ul class="nav-menu">
-                <li><a href="/" class="nav-link">Tools</a></li>
-                <li><a href="/sampling" class="nav-link">Sampling</a></li>
-                <li><a href="/about" class="nav-link">About</a></li>
-                <li><a href="/references" class="nav-link">References</a></li>
-                <li><a href="/accuracy" class="nav-link active">Accuracy</a></li>
-                <li><a href="/author" class="nav-link">Author</a></li>
-                <li><a href="/contribute" class="nav-link">Contribute</a></li>
-            </ul>
-            <button type="button" class="nav-toggle" id="navToggle" aria-label="Toggle menu">
-                <span></span>
-                <span></span>
-                <span></span>
-            </button>
-        </div>
-    </nav>
+{% block title %}Accuracy - lexprep{% endblock %}
+{% block description %}Tool accuracy benchmarks and evaluation metrics for lexprep - linguistic data preparation toolkit.{% endblock %}
 
-    <!-- Page Header -->
-    <header class="page-header">
-        <div class="container">
-            <h1 class="page-title">
-                Tool <span class="gradient-text">Accuracy</span>
-            </h1>
-            <p class="page-subtitle">
-                Evaluation metrics and benchmarks for each tool
-            </p>
-        </div>
-    </header>
-
-    <!-- Main Content -->
+{% block page_content %}
     <main class="content-section">
         <div class="container">
             <!-- Summary Overview -->
@@ -161,7 +113,7 @@
                             Uses TeX-compatible hyphenation dictionaries from LibreOffice (Hunspell format)
                             Hyphenates words using language-specific patterns; syllable count is inferred from hyphenation segments.
                         </p>
-                
+
                     </div>
                 </div>
 
@@ -335,7 +287,7 @@
                             MeCab morphological analyzer with UniDic dictionary developed by NINJAL
                             (National Institute for Japanese Language and Linguistics).
                         </p>
-                    
+
                         <p style="margin-top: 12px;">
                             <strong>Output:</strong> Detailed Japanese POS tags<br>
                             <strong>Best for:</strong> Japanese linguistics, detailed morphological analysis
@@ -356,9 +308,4 @@
             </div>
         </div>
     </main>
-
-{% include 'partials/footer.html' %}
-
-    <script src="/static/js/app.js"></script>
-</body>
-</html>
+{% endblock %}

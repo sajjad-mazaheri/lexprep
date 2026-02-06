@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}lexprep{% endblock %}</title>
+    <meta name="description" content="{% block description %}{% endblock %}">
+    {% block extra_meta %}{% endblock %}
+    <link rel="icon" type="image/png" href="/static/images/favicon.png">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-KH8H8BJF9C"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-KH8H8BJF9C');
+    </script>
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <div class="bg-gradient"></div>
+    <div class="bg-pattern"></div>
+
+    {% block navbar %}
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/" class="nav-logo">
+                <img src="/static/images/logo.png" alt="lexprep" class="logo-img">
+            </a>
+            <ul class="nav-menu">
+                <li><a href="/" class="nav-link {{ 'active' if active_page == 'home' }}">Tools</a></li>
+                <li><a href="/sampling" class="nav-link {{ 'active' if active_page == 'sampling' }}">Sampling</a></li>
+                <li><a href="/about" class="nav-link {{ 'active' if active_page == 'about' }}">About</a></li>
+                <li><a href="/references" class="nav-link {{ 'active' if active_page == 'references' }}">References</a></li>
+                <li><a href="/accuracy" class="nav-link {{ 'active' if active_page == 'accuracy' }}">Accuracy</a></li>
+                <li><a href="/author" class="nav-link {{ 'active' if active_page == 'author' }}">Author</a></li>
+                <li><a href="/contribute" class="nav-link {{ 'active' if active_page == 'contribute' }}">Contribute</a></li>
+            </ul>
+            <button type="button" class="nav-toggle" id="navToggle" aria-label="Toggle menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </nav>
+    {% endblock %}
+
+    {% block content %}
+    {% if page_title %}
+    <header class="page-header">
+        <div class="container">
+            <h1 class="page-title">
+                {{ page_title }}
+            </h1>
+            {% if page_subtitle %}
+            <p class="page-subtitle">
+                {{ page_subtitle }}
+            </p>
+            {% endif %}
+        </div>
+    </header>
+    {% endif %}
+
+    {% block page_content %}{% endblock %}
+    {% endblock %}
+
+    {% block footer %}
+    {% include 'partials/footer.html' %}
+    {% endblock %}
+
+    {% block toast %}{% endblock %}
+
+    {% block scripts %}
+    <script src="/static/js/app.js"></script>
+    {% endblock %}
+
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

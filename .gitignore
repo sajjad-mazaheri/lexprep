@@ -170,4 +170,5 @@ settings.local.*
 web/static/images/*
 !web/static/images/favicon.png
 !web/static/images/logo.png
+!web/static/images/AUTHOR.png
 !web/static/images/.gitkeep

@@ -1,65 +1,17 @@
-<!DOCTYPE html>
-<html lang="en" dir="ltr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>References - lexprep</title>
-    <meta name="description" content="Libraries and references used in lexprep - linguistic data preparation toolkit.">
-    <link rel="icon" type="image/png" href="/static/images/favicon.png">
-    <link rel="stylesheet" href="/static/css/style.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-</head>
-<body>
-    <!-- Animated Background -->
-    <div class="bg-gradient"></div>
-    <div class="bg-pattern"></div>
-    
-    <!-- Navigation -->
-    <nav class="navbar">
-        <div class="nav-container">
-            <a href="/" class="nav-logo">
-                <img src="/static/images/logo.png" alt="lexprep" class="logo-img">
-            </a>
-            <ul class="nav-menu">
-                <li><a href="/" class="nav-link">Tools</a></li>
-                <li><a href="/sampling" class="nav-link">Sampling</a></li>
-                <li><a href="/about" class="nav-link">About</a></li>
-                <li><a href="/references" class="nav-link active">References</a></li>
-                <li><a href="/accuracy" class="nav-link">Accuracy</a></li>
-                <li><a href="/author" class="nav-link">Author</a></li>
-                <li><a href="/contribute" class="nav-link">Contribute</a></li>
-            </ul>
-            <button type="button" class="nav-toggle" id="navToggle" aria-label="Toggle menu">
-                <span></span>
-                <span></span>
-                <span></span>
-            </button>
-        </div>
-    </nav>
+{% extends 'base.html' %}
 
-    <!-- Page Header -->
-    <header class="page-header">
-        <div class="container">
-            <h1 class="page-title">
-                <span class="gradient-text">References</span> & Libraries
-            </h1>
-            <p class="page-subtitle">
-                The excellent open-source libraries that power lexprep
-            </p>
-        </div>
-    </header>
+{% block title %}References - lexprep{% endblock %}
+{% block description %}Libraries and references used in lexprep - linguistic data preparation toolkit.{% endblock %}
 
-    <!-- Main Content -->
+{% block page_content %}
     <main class="content-section">
         <div class="container">
             <!-- Acknowledgment -->
             <div class="content-card">
                 <h3>🙏 Acknowledgments</h3>
                 <p>
-                    lexprep is built on the shoulders of giants. We integrate and depend on several 
-                    excellent open-source libraries created by talented researchers and developers 
+                    lexprep is built on the shoulders of giants. We integrate and depend on several
+                    excellent open-source libraries created by talented researchers and developers
                     around the world. This page acknowledges their work and provides proper attribution.
                 </p>
                 <p>
@@ -78,7 +30,7 @@
                             <span class="tag">G2P</span>
                         </h4>
                         <p>
-                            Grapheme-to-phoneme conversion using the CMU Pronouncing Dictionary and a 
+                            Grapheme-to-phoneme conversion using the CMU Pronouncing Dictionary and a
                             neural network model for out-of-vocabulary words.
                         </p>
                         <p class="license">
@@ -107,7 +59,7 @@
                             <span class="tag">POS</span>
                         </h4>
                         <p>
-                            Industrial-strength natural language processing library with pre-trained 
+                            Industrial-strength natural language processing library with pre-trained
                             models for many languages.
                         </p>
                         <p class="license">
@@ -129,7 +81,7 @@
                             <span class="tag">G2P</span>
                         </h4>
                         <p>
-                            Persian grapheme-to-phoneme conversion library. Handles Persian script 
+                            Persian grapheme-to-phoneme conversion library. Handles Persian script
                             and produces phoneme-like Latin transcriptions.
                         </p>
                         <p class="license">
@@ -166,7 +118,7 @@
                             <span class="tag">POS</span>
                         </h4>
                         <p>
-                            Stanford NLP Group's Python library for many human languages. Provides 
+                            Stanford NLP Group's Python library for many human languages. Provides
                             Universal Dependencies-style annotations.
                         </p>
                         <p class="license">
@@ -181,7 +133,7 @@
                             <span class="tag">Tokenizer</span>
                         </h4>
                         <p>
-                            A Cython wrapper for MeCab, a Japanese morphological analyzer. Fast and 
+                            A Cython wrapper for MeCab, a Japanese morphological analyzer. Fast and
                             easy to use from Python.
                         </p>
                         <p class="license">
@@ -196,7 +148,7 @@
                             <span class="tag">Dictionary</span>
                         </h4>
                         <p>
-                            UniDic is a dictionary for morphological analysis of Japanese, developed by 
+                            UniDic is a dictionary for morphological analysis of Japanese, developed by
                             NINJAL (National Institute for Japanese Language and Linguistics).
                         </p>
                         <p class="license">
@@ -208,7 +160,7 @@
                 </div>
             </div>
 
-        
+
 
             <!-- Citing lexprep -->
             <div class="content-card">
@@ -239,24 +191,19 @@ https://github.com/sajjad-mazaheri/lexprep
                     License Information
                 </h3>
                 <p>
-                    lexprep itself is released under the <strong>MIT License</strong>, which allows 
+                    lexprep itself is released under the <strong>MIT License</strong>, which allows
                     free use, modification, and distribution.
                 </p>
                 <p>
-                    However, some underlying libraries have different licenses (GPL, LGPL, Apache, etc.). 
-                    If you redistribute lexprep or include it in other projects, please ensure compliance 
+                    However, some underlying libraries have different licenses (GPL, LGPL, Apache, etc.).
+                    If you redistribute lexprep or include it in other projects, please ensure compliance
                     with all applicable licenses.
                 </p>
                 <p>
-                    When in doubt, refer to the individual library repositories for their specific 
+                    When in doubt, refer to the individual library repositories for their specific
                     license terms and requirements.
                 </p>
             </div>
         </div>
     </main>
-
-{% include 'partials/footer.html' %}
-
-    <script src="/static/js/app.js"></script>
-</body>
-</html>
+{% endblock %}

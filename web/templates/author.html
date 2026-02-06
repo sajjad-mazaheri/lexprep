@@ -1,57 +1,9 @@
-<!DOCTYPE html>
-<html lang="en" dir="ltr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Author - lexprep</title>
-    <meta name="description" content="Meet the creator of lexprep - linguistic data preparation toolkit.">
-    <link rel="icon" type="image/png" href="/static/images/favicon.png">
-    <link rel="stylesheet" href="/static/css/style.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-</head>
-<body>
-    <!-- Animated Background -->
-    <div class="bg-gradient"></div>
-    <div class="bg-pattern"></div>
-    
-    <!-- Navigation -->
-    <nav class="navbar">
-        <div class="nav-container">
-            <a href="/" class="nav-logo">
-                <img src="/static/images/logo.png" alt="lexprep" class="logo-img">
-            </a>
-            <ul class="nav-menu">
-                <li><a href="/" class="nav-link">Tools</a></li>
-                <li><a href="/sampling" class="nav-link">Sampling</a></li>
-                <li><a href="/about" class="nav-link">About</a></li>
-                <li><a href="/references" class="nav-link">References</a></li>
-                <li><a href="/accuracy" class="nav-link">Accuracy</a></li>
-                <li><a href="/author" class="nav-link active">Author</a></li>
-                <li><a href="/contribute" class="nav-link">Contribute</a></li>
-            </ul>
-            <button type="button" class="nav-toggle" id="navToggle" aria-label="Toggle menu">
-                <span></span>
-                <span></span>
-                <span></span>
-            </button>
-        </div>
-    </nav>
+{% extends 'base.html' %}
 
-    <!-- Page Header -->
-    <header class="page-header">
-        <div class="container">
-            <h1 class="page-title">
-                Meet the <span class="gradient-text">Author</span>
-            </h1>
-            <p class="page-subtitle">
-                The person behind lexprep
-            </p>
-        </div>
-    </header>
+{% block title %}Author - lexprep{% endblock %}
+{% block description %}Meet the creator of lexprep - linguistic data preparation toolkit.{% endblock %}
 
-    <!-- Main Content -->
+{% block page_content %}
     <main class="content-section">
         <div class="container">
             <!-- Author Card -->
@@ -65,9 +17,9 @@
                         Developer ·  Neuroscience MSc · Psycholinguistics Enthusiast
                     </p>
                     <p>
-                        I'm Sajjad, the creator of lexprep. With a background in neuroscience and a passion for psycholinguistics. 
+                        I'm Sajjad, the creator of lexprep. With a background in neuroscience and a passion for psycholinguistics.
                         lexprep started as a tool I needed in my own work with controlled wordlists for reading-related studies.
-                        My goal is to provide researchers with user-friendly software that simplifies the process of preparing 
+                        My goal is to provide researchers with user-friendly software that simplifies the process of preparing
                         and analyzing linguistic data. <br>
                     </p>
                     <div class="social-links">
@@ -89,10 +41,10 @@
             <div class="content-card">
                 <h3>💡 Motivation</h3>
                 <p>
-                    The motivation behind lexprep stems from the challenges researchers face 
-                    when preparing linguistic data for experiments and analyses. Many studies 
+                    The motivation behind lexprep stems from the challenges researchers face
+                    when preparing linguistic data for experiments and analyses. Many studies
                     require carefully controlled wordlists with specific linguistic annotations,
-    
+
                 </p>
                 <p>
                     The goal of lexprep is to provide researchers with the tools they need without requiring extensive programming knowledge.
@@ -103,7 +55,7 @@
             <div class="content-card">
                 <h3>🎯 Vision</h3>
                 <p>
-                    The long-term vision for lexprep is to become the go-to toolkit for 
+                    The long-term vision for lexprep is to become the go-to toolkit for
                     wordlist processing across many languages. The project aims to:
                 </p>
                 <ul>
@@ -127,15 +79,10 @@
                     <li>Reach out via email for research collaborations</li>
                 </ul>
                 <p>
-                    If you use lexprep in your research, I'd appreciate hearing about it! 
+                    If you use lexprep in your research, I'd appreciate hearing about it!
                     Knowing how the tool is being used helps guide future development.
                 </p>
             </div>
         </div>
     </main>
-
-{% include 'partials/footer.html' %}
-
-    <script src="/static/js/app.js"></script>
-</body>
-</html>
+{% endblock %}
