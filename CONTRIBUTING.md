@@ -1,13 +1,14 @@
 # Contributing to lexprep
 
-Thank you for considering contributing to lexprep! This document provides guidelines for contributing to the project.
+Thanks for your interest in contributing to lexprep.  
+This document outlines the basic workflow and expectations for contributions.
 
 ## Getting Started
 
 1. Fork the repository on GitHub
 2. Clone your fork locally:
    ```bash
-   git clone https://github.com/sajjad-mazaheri/lexprep.git
+   git clone 
    cd lexprep
    ```
 3. Create a virtual environment and install development dependencies:
@@ -33,12 +34,10 @@ Thank you for considering contributing to lexprep! This document provides guidel
    pytest tests/
    ```
 
-4. Ensure all tests pass and code quality checks succeed:
-   ```bash
-   pytest -v
-   ruff check src/
-   mypy src/
-   ```
+4. Ensure all tests pass before opening a pull request:
+```bash
+pytest 
+```
 
 5. Commit your changes with a clear, descriptive commit message:
    ```bash
@@ -51,7 +50,7 @@ Thank you for considering contributing to lexprep! This document provides guidel
 
 - Follow PEP 8 style guidelines
 - Use type hints for function arguments and return values
-- Write docstrings for all public functions and classes
+- Add docstrings for public functions and CLI-facing code
 - Keep functions focused and modular
 - Use descriptive variable names
 
@@ -61,7 +60,7 @@ Thank you for considering contributing to lexprep! This document provides guidel
 When adding new features:
 
 1. **Discuss First**: For major features, open an issue first to discuss the approach
-2. **Update Documentation**: Update README.md and add docstrings
+2. **Update Documentation**: Update README.md and, where relevant, the CLI help text or output documentation
 3. **Add Examples**: Include usage examples in `examples/` if applicable
 4. **Add Tests**: Ensure comprehensive test coverage
 5. **Update CLI**: If adding CLI commands, update help text appropriately

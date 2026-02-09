@@ -126,9 +126,6 @@ raw_output_*.txt
 test_output*.xlsx
 test_output*.csv
 
-# Ignore test output files but NOT tests/ directory
-!/tests/
-!/tests/**
 
 *.log
 web_server.log

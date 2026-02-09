@@ -1,0 +1,40 @@
+# Deploy to Production Server
+
+name: Deploy
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [main]
+
+jobs:
+  deploy:
+    name: Deploy to Server
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'success'
+
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: |
+            cd ${{ secrets.DEPLOY_PATH }}
+
+            echo "── Pulling latest code ──"
+            git fetch origin main
+            git reset --hard origin/main
+
+            echo "── Installing dependencies ──"
+            source .venv/bin/activate
+            pip install -e ".[fa,en,ja]" --quiet
+            pip install -r web/requirements.txt --quiet
+
+            echo "── Restarting service ──"
+            sudo systemctl restart ${{ secrets.DEPLOY_SERVICE }}
+
+            echo "── Deploy complete ──"
+            git log --oneline -1
