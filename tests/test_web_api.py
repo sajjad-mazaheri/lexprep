@@ -26,7 +26,6 @@ except ImportError:
 
 from app import app as flask_app  # noqa: E402
 
-
 # dependency checks
 
 
@@ -193,11 +192,13 @@ class TestAPIStatus:
 
 class TestProcessValidation:
     def test_missing_words(self, client):
-        resp = client.post("/api/process", json={"words": "", "language": "en", "tool": "syllables"})
+        payload = {"words": "", "language": "en", "tool": "syllables"}
+        resp = client.post("/api/process", json=payload)
         assert resp.status_code == 400
 
     def test_missing_language(self, client):
-        resp = client.post("/api/process", json={"words": "hello", "language": "", "tool": "syllables"})
+        payload = {"words": "hello", "language": "", "tool": "syllables"}
+        resp = client.post("/api/process", json=payload)
         assert resp.status_code == 400
 
     def test_missing_tool(self, client):

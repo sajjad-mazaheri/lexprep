@@ -1,11 +1,9 @@
 """ tests for Persian syllable counting (lexprep.fa.syllables)."""
 
 from lexprep.fa.syllables import (
-    DEFAULT_VOWEL_PATTERNS,
     count_syllables_from_pronunciation,
     syllabify_orthographic,
 )
-
 
 # count_syllables_from_pronunciation
 
@@ -28,7 +26,9 @@ class TestPhoneticSyllableCount:
 
     def test_spaces_ignored_in_count(self):
         # Spaces are removed before counting.
-        assert count_syllables_from_pronunciation("sa lam") == count_syllables_from_pronunciation("salam")
+        with_space = count_syllables_from_pronunciation("sa lam")
+        without_space = count_syllables_from_pronunciation("salam")
+        assert with_space == without_space
 
     def test_long_vowels(self):
         # Long vowels count once each.

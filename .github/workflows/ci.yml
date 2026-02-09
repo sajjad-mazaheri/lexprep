@@ -117,6 +117,9 @@ jobs:
           pip install flask flask-cors markupsafe
           python -m spacy download en_core_web_sm
 
+      - name: Download NLTK data
+        run: python -c "import nltk; nltk.download('averaged_perceptron_tagger_eng'); nltk.download('cmudict')"
+
       - name: Download Stanza models
         run: |
           python -c "import stanza; stanza.download('fa', verbose=False)"
@@ -156,6 +159,9 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e ".[dev,en]"
           python -m spacy download en_core_web_sm
+
+      - name: Download NLTK data
+        run: python -c "import nltk; nltk.download('averaged_perceptron_tagger_eng'); nltk.download('cmudict')"
 
       - name: Run English tests
         run: |
@@ -270,6 +276,9 @@ jobs:
           pip install -e ".[dev,en,fa,ja]"
           python -m spacy download en_core_web_sm
 
+      - name: Download NLTK data
+        run: python -c "import nltk; nltk.download('averaged_perceptron_tagger_eng'); nltk.download('cmudict')"
+
       - name: Download Stanza models
         run: |
           python -c "import stanza; stanza.download('fa', verbose=False)"
@@ -313,6 +322,9 @@ jobs:
           pip install -e ".[dev,en,fa,ja]"
           pip install flask flask-cors markupsafe
           python -m spacy download en_core_web_sm
+
+      - name: Download NLTK data
+        run: python -c "import nltk; nltk.download('averaged_perceptron_tagger_eng'); nltk.download('cmudict')"
 
       - name: Download Stanza models
         run: |

@@ -12,7 +12,9 @@ try:
 except ImportError:
     _HAS_EN = False
 
-pytestmark = pytest.mark.skipif(not _HAS_EN, reason="English deps not installed (pip install 'lexprep[en]')")
+pytestmark = pytest.mark.skipif(
+    not _HAS_EN, reason="English deps not installed",
+)
 
 
 class TestTranscribeWords:

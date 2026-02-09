@@ -11,7 +11,9 @@ try:
 except ImportError:
     _HAS_FA_POS = False
 
-pytestmark = pytest.mark.skipif(not _HAS_FA_POS, reason="Persian POS deps not installed (pip install 'lexprep[fa]')")
+pytestmark = pytest.mark.skipif(
+    not _HAS_FA_POS, reason="Persian POS deps not installed",
+)
 
 
 class TestTagWords:

@@ -14,7 +14,6 @@ from lexprep.sampling.stratified import (
     validate_custom_ranges,
 )
 
-
 # fixtures
 
 @pytest.fixture
@@ -127,13 +126,21 @@ class TestStratifiedSampleQuantiles:
         assert report.strata_count == 3
 
     def test_reproducible(self, df_100):
-        out1, _ = stratified_sample_quantiles(df_100, score_col="score", n_total=20, bins=2, random_state=42)
-        out2, _ = stratified_sample_quantiles(df_100, score_col="score", n_total=20, bins=2, random_state=42)
+        out1, _ = stratified_sample_quantiles(
+            df_100, score_col="score", n_total=20, bins=2, random_state=42,
+        )
+        out2, _ = stratified_sample_quantiles(
+            df_100, score_col="score", n_total=20, bins=2, random_state=42,
+        )
         assert out1["word"].tolist() == out2["word"].tolist()
 
     def test_different_seeds_differ(self, df_100):
-        out1, _ = stratified_sample_quantiles(df_100, score_col="score", n_total=20, bins=2, random_state=1)
-        out2, _ = stratified_sample_quantiles(df_100, score_col="score", n_total=20, bins=2, random_state=99)
+        out1, _ = stratified_sample_quantiles(
+            df_100, score_col="score", n_total=20, bins=2, random_state=1,
+        )
+        out2, _ = stratified_sample_quantiles(
+            df_100, score_col="score", n_total=20, bins=2, random_state=99,
+        )
         assert out1["word"].tolist() != out2["word"].tolist()
 
     def test_missing_column_raises(self, df_100):

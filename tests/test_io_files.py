@@ -4,8 +4,6 @@ import pandas as pd
 import pytest
 
 from lexprep.io.files import (
-    SUPPORTED_TABULAR_EXTS,
-    SUPPORTED_TEXT_EXTS,
     _guess_word_column,
     coerce_str_series,
     ensure_column,
@@ -13,7 +11,6 @@ from lexprep.io.files import (
     read_wordlist,
     write_table,
 )
-
 
 # _guess_word_column tests
 
@@ -23,7 +20,7 @@ class TestGuessWordColumn:
         df = pd.DataFrame({"word": ["a"], "other": [1]})
         assert _guess_word_column(df) == "word"
 
-    def test_finds_Item(self):
+    def test_finds_item_column(self):
         df = pd.DataFrame({"Item": ["a"], "freq": [1]})
         assert _guess_word_column(df) == "Item"
 

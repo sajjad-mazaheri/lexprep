@@ -12,7 +12,9 @@ try:
 except ImportError:
     _HAS_FA = False
 
-pytestmark = pytest.mark.skipif(not _HAS_FA, reason="Persian deps not installed (pip install 'lexprep[fa]')")
+pytestmark = pytest.mark.skipif(
+    not _HAS_FA, reason="Persian deps not installed",
+)
 
 
 class TestTranscribeWords:

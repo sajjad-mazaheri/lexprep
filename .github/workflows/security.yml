@@ -31,7 +31,9 @@ jobs:
           pip install pip-audit
 
       - name: Run pip-audit
-        run: pip-audit --strict --desc
+        run: |
+          pip freeze --exclude-editable > /tmp/reqs.txt
+          pip-audit --strict --desc -r /tmp/reqs.txt
 
   #  Secret scanning 
   secret-scan:
