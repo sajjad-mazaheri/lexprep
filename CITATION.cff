@@ -1,0 +1,14 @@
+cff-version: 1.0.0
+title: LexPrep
+message: "If you use LexPrep in your research, please cite it as below."
+type: software
+authors:
+  - family-names: Mazaherizaveh
+    given-names: Sajjad
+    orcid: https://orcid.org/0009-0001-0465-0444
+repository-code: https://github.com/sajjad-mazaheri/lexprep
+url: https://doi.org/10.5281/zenodo.18713755
+doi: 10.5281/zenodo.18713755
+license: MIT
+version: 1.0.0
+date-released: 2026-02-20
