@@ -1,0 +1,15 @@
+# Funding configuration for LexPrep
+# This file enables the "Sponsor" button on GitHub
+
+github: [sajjad-mazaheri]
+
+# Optional future platforms (uncomment when available)
+
+# open_collective: lexprep
+# patreon: your_patreon_username
+# ko_fi: your_kofi_username
+# liberapay: your_liberapay_username
+# buy_me_a_coffee: your_buymeacoffee_username
+
+custom:
+  - "https://github.com/sponsors/sajjad-mazaheri"
