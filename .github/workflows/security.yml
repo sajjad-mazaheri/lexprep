@@ -7,8 +7,18 @@ name: Security
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - "CITATION.cff"
+      - "**.md"
+      - "LICENSE"
+      - ".github/FUNDING.yml"
   pull_request:
     branches: [main]
+    paths-ignore:
+      - "CITATION.cff"
+      - "**.md"
+      - "LICENSE"
+      - ".github/FUNDING.yml"
   schedule:
     - cron: "0 6 * * 1" # Every Monday at 06:00 UTC
 
