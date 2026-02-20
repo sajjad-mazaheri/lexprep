@@ -6,8 +6,18 @@ name: CI
 on:
   push:
     branches: [main, develop]
+    paths-ignore:
+      - "CITATION.cff"
+      - "**.md"
+      - "LICENSE"
+      - ".github/FUNDING.yml"
   pull_request:
     branches: [main, develop]
+    paths-ignore:
+      - "CITATION.cff"
+      - "**.md"
+      - "LICENSE"
+      - ".github/FUNDING.yml"
 
 concurrency:
   group: ci-${{ github.ref }}
