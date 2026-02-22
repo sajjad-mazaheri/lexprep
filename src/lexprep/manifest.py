@@ -6,6 +6,7 @@ import importlib.metadata
 import re
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from pathlib import PurePath
 from typing import Any, Dict, List, Optional
 
 from lexprep import __version__
@@ -107,9 +108,18 @@ _UNSAFE_CHARS = re.compile(r'[<>:"/\\|?*\x00-\x1f\s]+')
 
 
 def sanitize_basename(name: str) -> str:
-    """Remove/replace characters unsafe for filenames."""
+    """Remove/replace characters unsafe for filenames and strip path components.
+
+    Ensures that potentially untrusted basenames cannot introduce
+    directory traversal or hidden file semantics when used in filenames.
+    """
+    # Replace clearly unsafe characters (including slashes and whitespace)
     clean = _UNSAFE_CHARS.sub("_", name)
-    return clean.strip("_") or "output"
+    # Normalise any remaining path structure (e.g. "..", ".") and keep only the name
+    clean = PurePath(clean).name
+    # Strip leading/trailing underscores and dots to avoid hidden or empty names
+    clean = clean.strip("_.")
+    return clean or "output"
 
 
 # ---------------------------------------------------------------------------

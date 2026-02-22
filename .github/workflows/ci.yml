@@ -125,7 +125,14 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e ".[dev,en,fa,ja]"
           pip install flask flask-cors markupsafe
-          python -m spacy download en_core_web_sm
+
+      - name: Download spaCy model (with retry)
+        run: |
+          for i in 1 2 3 4 5; do
+            python -m spacy download en_core_web_sm && break
+            echo "Attempt $i failed, retrying in ${i}0s..."
+            sleep $((i*10))
+          done
 
       - name: Download NLTK data
         run: python -c "import nltk; nltk.download('averaged_perceptron_tagger_eng'); nltk.download('cmudict')"
@@ -168,7 +175,14 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -e ".[dev,en]"
-          python -m spacy download en_core_web_sm
+
+      - name: Download spaCy model (with retry)
+        run: |
+          for i in 1 2 3 4 5; do
+            python -m spacy download en_core_web_sm && break
+            echo "Attempt $i failed, retrying in ${i}0s..."
+            sleep $((i*10))
+          done
 
       - name: Download NLTK data
         run: python -c "import nltk; nltk.download('averaged_perceptron_tagger_eng'); nltk.download('cmudict')"
@@ -284,7 +298,14 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -e ".[dev,en,fa,ja]"
-          python -m spacy download en_core_web_sm
+
+      - name: Download spaCy model (with retry)
+        run: |
+          for i in 1 2 3 4 5; do
+            python -m spacy download en_core_web_sm && break
+            echo "Attempt $i failed, retrying in ${i}0s..."
+            sleep $((i*10))
+          done
 
       - name: Download NLTK data
         run: python -c "import nltk; nltk.download('averaged_perceptron_tagger_eng'); nltk.download('cmudict')"
@@ -331,7 +352,14 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e ".[dev,en,fa,ja]"
           pip install flask flask-cors markupsafe
-          python -m spacy download en_core_web_sm
+
+      - name: Download spaCy model (with retry)
+        run: |
+          for i in 1 2 3 4 5; do
+            python -m spacy download en_core_web_sm && break
+            echo "Attempt $i failed, retrying in ${i}0s..."
+            sleep $((i*10))
+          done
 
       - name: Download NLTK data
         run: python -c "import nltk; nltk.download('averaged_perceptron_tagger_eng'); nltk.download('cmudict')"
