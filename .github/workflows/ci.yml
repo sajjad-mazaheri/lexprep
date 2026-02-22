@@ -91,7 +91,7 @@ jobs:
 
       - name: Run core tests
         run: |
-          pytest tests/test_io_files.py tests/test_stratified.py tests/test_stratified_full.py tests/test_shuffle.py tests/test_fa_syllables.py tests/test_ja_pos_map.py tests/test_cli.py -v --tb=short
+          pytest tests/test_io_files.py tests/test_stratified.py tests/test_stratified_full.py tests/test_shuffle.py tests/test_ja_pos_map.py tests/test_length.py tests/test_manifest.py tests/test_packaging.py tests/test_sampling_audit.py -v --tb=short
 
   #  Web API tests (with all NLP deps for full coverage) 
   test-web:
@@ -349,7 +349,7 @@ jobs:
         if: github.event_name == 'push'
         uses: codecov/codecov-action@v5
         with:
-          file: ./coverage.xml
+          files: ./coverage.xml
           fail_ci_if_error: false
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
