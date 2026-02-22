@@ -9,10 +9,15 @@ import uuid
 import threading
 from datetime import datetime
 from functools import wraps
+from pathlib import Path
 import hashlib
 import hmac
 import sqlite3
 import logging
+
+from lexprep.manifest import build_manifest, get_libraries_for_tool, utc_now
+from lexprep.packaging import build_zip, _df_to_bytes
+from lexprep.length import LENGTH_METHOD, compute_length_chars, length_distribution
 
 logger = logging.getLogger(__name__)
 
@@ -316,6 +321,80 @@ def admin():
         page_title=Markup('<span class="gradient-text">Admin</span> Panel'))
 
 
+# ============== ZIP/Manifest Helpers ==============
+
+
+def _get_output_ext(filename):
+    """Determine output file extension from input filename."""
+    ext = Path(filename).suffix.lstrip('.').lower()
+    return ext if ext in ('csv', 'tsv') else 'xlsx'
+
+
+def _compute_summary(tool, result_df):
+    """Compute tool-dependent summary stats for manifest."""
+    if tool in ('pos', 'pos_unidic', 'pos_stanza'):
+        if 'pos' in result_df.columns:
+            return {'pos_distribution': result_df['pos'].value_counts().to_dict()}
+    elif tool in ('syllables', 'syllables_phonetic'):
+        if 'syllable_count' in result_df.columns:
+            return {'syllable_distribution': result_df['syllable_count'].value_counts().to_dict()}
+    elif tool == 'length':
+        if 'length_chars' in result_df.columns:
+            lengths = result_df['length_chars'].tolist()
+            dist = length_distribution(lengths)
+            summary = {'length_method': LENGTH_METHOD}
+            if dist:
+                summary['length_distribution'] = dist.to_dict()
+            return summary
+    return None
+
+
+def _get_added_columns(tool, result_columns):
+    """Get the list of added columns for a tool (excluding 'word')."""
+    return [c for c in result_columns if c != 'word']
+
+
+def _build_zip_response(
+    tool, language, filename, word_column, df, output_df, result_df,
+    ext=None, timestamp=None,
+):
+    """Build a ZIP response for language tool endpoints."""
+    ts = timestamp or utc_now()
+    ext = ext or _get_output_ext(filename)
+    input_basename = Path(filename).stem
+
+    # Language-agnostic tools should not record a language
+    manifest_language = None if tool == 'length' else language
+
+    added_cols = _get_added_columns(tool, result_df.columns)
+    summary = _compute_summary(tool, result_df)
+
+    manifest = build_manifest(
+        tool_key=tool,
+        language=manifest_language,
+        original_filename=filename,
+        file_type=Path(filename).suffix.lstrip('.'),
+        row_count=len(df),
+        column_mapping={'word_column': word_column},
+        added_columns=added_cols,
+        libraries=get_libraries_for_tool(language, tool),
+        timestamp=ts,
+        summary=summary,
+    )
+    zip_bytes, zip_name = build_zip(
+        manifest=manifest,
+        main_df=output_df,
+        input_basename=input_basename,
+        output_ext=ext,
+    )
+    return send_file(
+        io.BytesIO(zip_bytes),
+        mimetype='application/zip',
+        as_attachment=True,
+        download_name=zip_name,
+    )
+
+
 # ============== API Routes ==============
 
 @app.route('/api/test-persian', methods=['GET'])
@@ -414,6 +493,7 @@ def get_tools():
                 'syllables': {'name': 'Syllable Count', 'description': 'Count syllables using orthographic method'},
                 'syllables_phonetic': {'name': 'Syllable Count (Phonetic)', 'description': 'Count syllables with automatic G2P'},
                 'pos': {'name': 'POS Tagging', 'description': 'Part-of-speech tagging with Stanza (UD tags)'},
+                'length': {'name': 'Word Length', 'description': 'Count Unicode codepoints (length_chars)'},
             }
         },
         'en': {
@@ -423,6 +503,7 @@ def get_tools():
                 'g2p': {'name': 'G2P (ARPAbet)', 'description': 'Convert to ARPAbet phonemes'},
                 'syllables': {'name': 'Syllable Count', 'description': 'Count syllables using pyphen'},
                 'pos': {'name': 'POS Tagging', 'description': 'Part-of-speech tagging with spaCy'},
+                'length': {'name': 'Word Length', 'description': 'Count Unicode codepoints (length_chars)'},
             }
         },
         'ja': {
@@ -431,6 +512,7 @@ def get_tools():
             'tools': {
                 'pos_unidic': {'name': 'POS (UniDic)', 'description': 'Detailed Japanese POS tags'},
                 'pos_stanza': {'name': 'POS (Stanza)', 'description': 'Universal POS tags'},
+                'length': {'name': 'Word Length', 'description': 'Count Unicode codepoints (length_chars)'},
             }
         }
     }
@@ -556,6 +638,11 @@ def process_words():
                         'pos': r.upos
                     })
 
+        # Length tool — language-agnostic (inline)
+        if tool == 'length':
+            lengths = compute_length_chars(words)
+            results = [{'word': w, 'length_chars': ln} for w, ln in zip(words, lengths)]
+
         return jsonify({'results': results, 'count': len(results)})
 
     except ImportError as e:
@@ -586,39 +673,49 @@ def process_persian_pos(words):
 
 @app.route('/api/download', methods=['POST'])
 def download_results():
-    """Generate downloadable file from results"""
+    """Generate downloadable ZIP from inline results"""
     try:
         data = request.json
         results = data.get('results', [])
         format_type = data.get('format', 'csv')
+        language = data.get('language', '')
+        tool = data.get('tool', '')
 
         if not results:
             return jsonify({'error': 'No results to download'}), 400
 
         df = pd.DataFrame(results)
+        result_df = df.copy()
+        ext = format_type if format_type in ('csv', 'tsv') else 'xlsx'
 
-        output = io.BytesIO()
+        added_cols = _get_added_columns(tool, result_df.columns)
+        summary = _compute_summary(tool, result_df)
 
-        if format_type == 'xlsx':
-            df.to_excel(output, index=False, engine='openpyxl')
-            mimetype = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-            filename = 'lexprep_results.xlsx'
-        elif format_type == 'tsv':
-            df.to_csv(output, index=False, sep='\t')
-            mimetype = 'text/tab-separated-values'
-            filename = 'lexprep_results.tsv'
-        else:  # csv
-            df.to_csv(output, index=False)
-            mimetype = 'text/csv'
-            filename = 'lexprep_results.csv'
-
-        output.seek(0)
-
+        ts = utc_now()
+        manifest_language = None if tool == 'length' else (language or None)
+        manifest = build_manifest(
+            tool_key=tool,
+            language=manifest_language,
+            original_filename='inline_input.txt',
+            file_type='txt',
+            row_count=len(df),
+            column_mapping={'word_column': 'word'},
+            added_columns=added_cols,
+            libraries=get_libraries_for_tool(language, tool),
+            timestamp=ts,
+            summary=summary,
+        )
+        zip_bytes, zip_name = build_zip(
+            manifest=manifest,
+            main_df=df,
+            input_basename='lexprep_results',
+            output_ext=ext,
+        )
         return send_file(
-            output,
-            mimetype=mimetype,
+            io.BytesIO(zip_bytes),
+            mimetype='application/zip',
             as_attachment=True,
-            download_name=filename
+            download_name=zip_name,
         )
 
     except Exception as e:
@@ -739,32 +836,15 @@ def process_file():
             if col != 'word':
                 output_df[col] = result_df[col].values[:len(output_df)]
 
-        # Generate output file
-        output = io.BytesIO()
-
-        # Determine output format based on input
-        if filename.endswith('.csv'):
-            output_df.to_csv(output, index=False, encoding='utf-8-sig')
-            mimetype = 'text/csv'
-            out_filename = 'lexprep_results.csv'
-        elif filename.endswith('.tsv'):
-            output_df.to_csv(output, index=False, sep='\t', encoding='utf-8-sig')
-            mimetype = 'text/tab-separated-values'
-            out_filename = 'lexprep_results.tsv'
-        else:  # Excel or txt -> output as Excel
-            output_df.to_excel(output, index=False, engine='openpyxl')
-            mimetype = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-            out_filename = 'lexprep_results.xlsx'
-
-        output.seek(0)
-
+        # Build ZIP response
+        ext = _get_output_ext(filename)
         total_time = time.time() - start_time
         print(f"[API] Complete in {total_time:.2f}s", file=sys.stderr, flush=True)
-        response = send_file(
-            output,
-            mimetype=mimetype,
-            as_attachment=True,
-            download_name=out_filename
+
+        response = _build_zip_response(
+            tool=tool, language=language, filename=file.filename,
+            word_column=word_column, df=df, output_df=output_df,
+            result_df=result_df, ext=ext,
         )
         response.headers['X-Word-Count'] = str(len(words))
         response.headers['Access-Control-Expose-Headers'] = 'X-Word-Count, Content-Disposition'
@@ -891,31 +971,41 @@ def _process_file_background(job_id, file_bytes, filename, language, tool, word_
             if col != 'word':
                 output_df[col] = result_df[col].values[:len(output_df)]
 
-        # Generate output file
-        output = io.BytesIO()
-        if filename.endswith('.csv'):
-            output_df.to_csv(output, index=False, encoding='utf-8-sig')
-            mimetype = 'text/csv'
-            out_filename = 'lexprep_results.csv'
-        elif filename.endswith('.tsv'):
-            output_df.to_csv(output, index=False, sep='\t', encoding='utf-8-sig')
-            mimetype = 'text/tab-separated-values'
-            out_filename = 'lexprep_results.tsv'
-        else:
-            output_df.to_excel(output, index=False, engine='openpyxl')
-            mimetype = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-            out_filename = 'lexprep_results.xlsx'
+        # Build ZIP
+        ext = _get_output_ext(filename)
+        input_basename = Path(filename).stem
+        added_cols = _get_added_columns(tool, result_df.columns)
+        summary = _compute_summary(tool, result_df)
+        ts = utc_now()
 
-        output.seek(0)
+        manifest_language = None if tool == 'length' else language
+        manifest = build_manifest(
+            tool_key=tool,
+            language=manifest_language,
+            original_filename=filename,
+            file_type=Path(filename).suffix.lstrip('.'),
+            row_count=len(df),
+            column_mapping={'word_column': word_column},
+            added_columns=added_cols,
+            libraries=get_libraries_for_tool(language, tool),
+            timestamp=ts,
+            summary=summary,
+        )
+        zip_bytes, zip_name = build_zip(
+            manifest=manifest,
+            main_df=output_df,
+            input_basename=input_basename,
+            output_ext=ext,
+        )
 
         with _jobs_lock:
             _jobs[job_id]['status'] = 'completed'
             _jobs[job_id]['progress'] = 100
             _jobs[job_id]['message'] = 'Complete!'
             _jobs[job_id]['result'] = {
-                'data': output.getvalue(),
-                'mimetype': mimetype,
-                'filename': out_filename,
+                'data': zip_bytes,
+                'mimetype': 'application/zip',
+                'filename': zip_name,
                 'word_count': len(words)
             }
 
@@ -1139,6 +1229,13 @@ def process_words_batch(words, language, tool):
                     'pos': r.upos if r else ''
                 })
 
+    # Length tool — language-agnostic
+    if tool == 'length':
+        lengths = compute_length_chars(words)
+        results = []
+        for w, ln in zip(words, lengths):
+            results.append({'word': w, 'length_chars': ln})
+
     return results
 
 
@@ -1350,7 +1447,7 @@ def sampling_stratified():
             except json.JSONDecodeError:
                 return jsonify({'error': 'Invalid ranges format'}), 400
 
-            from lexprep.sampling.stratified import stratified_sample_custom_ranges, CustomRange
+            from lexprep.sampling.stratified import stratified_sample_custom_ranges_full, CustomRange
 
             ranges = []
             for r in ranges_data:
@@ -1372,7 +1469,7 @@ def sampling_stratified():
                 except (json.JSONDecodeError, ValueError):
                     fixed_counts = None
 
-            sample_df, report = stratified_sample_custom_ranges(
+            result = stratified_sample_custom_ranges_full(
                 df,
                 score_col=score_col,
                 ranges=ranges,
@@ -1389,9 +1486,9 @@ def sampling_stratified():
             if n_total <= 0:
                 return jsonify({'error': 'Total samples must be greater than 0'}), 400
 
-            from lexprep.sampling.stratified import stratified_sample_quantiles
+            from lexprep.sampling.stratified import stratified_sample_quantiles_full
 
-            sample_df, report = stratified_sample_quantiles(
+            result = stratified_sample_quantiles_full(
                 df,
                 score_col=score_col,
                 n_total=n_total,
@@ -1401,25 +1498,52 @@ def sampling_stratified():
                 random_state=random_state
             )
 
-        # Generate output file directly
-        output = io.BytesIO()
-        base_name = filename.rsplit('.', 1)[0] if '.' in filename else filename
-        out_filename = f'{base_name}_stratified_sample.xlsx'
+        # Build ZIP with sample + excluded + audit + manifest
+        from lexprep.sampling.audit import audit_to_bytes, build_sampling_manifest_section
 
-        sample_df.to_excel(output, index=False, engine='openpyxl')
-        output.seek(0)
+        report = result.report
+        audit_bytes_data = audit_to_bytes(report)
+        sampling_section = build_sampling_manifest_section(report)
+
+        ts = utc_now()
+        input_basename = Path(filename).stem
+        manifest = build_manifest(
+            tool_key='stratified',
+            language=None,
+            original_filename=filename,
+            file_type=Path(filename).suffix.lstrip('.'),
+            row_count=len(df),
+            column_mapping={'score_column': score_col},
+            added_columns=['bin_id'],
+            libraries=[],
+            timestamp=ts,
+            reproducibility={'seed': random_state, 'parameters': {
+                'mode': 'quantiles' if mode == 'quantile' else 'custom_ranges',
+                'bins': int(request.form.get('bins', 3)) if mode == 'quantile' else len(ranges),
+                'n_total': n_total,
+            }},
+            sampling=sampling_section,
+        )
+        zip_bytes, zip_name = build_zip(
+            manifest=manifest,
+            main_df=result.sample_df,
+            input_basename=input_basename,
+            output_ext='xlsx',
+            is_sampling=True,
+            excluded_df=result.excluded_df,
+            audit_bytes=audit_bytes_data,
+        )
 
         response = send_file(
-            output,
-            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            io.BytesIO(zip_bytes),
+            mimetype='application/zip',
             as_attachment=True,
-            download_name=out_filename
+            download_name=zip_name,
         )
-        
-        
+
         if report.warnings:
             response.headers['X-LexPrep-Warnings'] = json.dumps(report.warnings)
-            
+
         return response
 
     except ImportError as e:
@@ -1431,8 +1555,6 @@ def sampling_stratified():
 @app.route('/api/sampling/shuffle', methods=['POST'])
 def sampling_shuffle():
     """Shuffle rows across multiple files - returns ZIP with all shuffled files"""
-    import zipfile
-
     try:
         files = request.files.getlist('files')
         if len(files) < 2:
@@ -1464,41 +1586,55 @@ def sampling_shuffle():
         # Perform shuffling
         from lexprep.sampling.shuffle_rows import shuffle_corresponding_rows
 
-        out_dfs, _ = shuffle_corresponding_rows(
+        out_dfs, shuffle_report = shuffle_corresponding_rows(
             dfs,
             seed=seed,
             n_columns=n_columns
         )
 
-        # Create ZIP file with all shuffled files
-        zip_buffer = io.BytesIO()
-        with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
-            for out_df, original_name in zip(out_dfs, filenames):
-                # Determine output format based on input
-                base_name = original_name.rsplit('.', 1)[0] if '.' in original_name else original_name
-                ext = original_name.rsplit('.', 1)[1].lower() if '.' in original_name else 'xlsx'
+        # Build extra files for ZIP
+        extra_files = []
+        for out_df, original_name in zip(out_dfs, filenames):
+            base_name = original_name.rsplit('.', 1)[0] if '.' in original_name else original_name
+            ext = original_name.rsplit('.', 1)[1].lower() if '.' in original_name else 'xlsx'
+            if ext not in ('csv', 'tsv'):
+                ext = 'xlsx'
+            out_filename = f'{base_name}_shuffled.{ext}'
+            extra_files.append((out_filename, _df_to_bytes(out_df, ext)))
 
-                file_buffer = io.BytesIO()
-                out_filename = f'{base_name}_shuffled.{ext}'
-
-                if ext == 'csv':
-                    out_df.to_csv(file_buffer, index=False, encoding='utf-8-sig')
-                elif ext == 'tsv':
-                    out_df.to_csv(file_buffer, index=False, sep='\t', encoding='utf-8-sig')
-                else:
-                    out_df.to_excel(file_buffer, index=False, engine='openpyxl')
-                    out_filename = f'{base_name}_shuffled.xlsx'
-
-                file_buffer.seek(0)
-                zip_file.writestr(out_filename, file_buffer.getvalue())
-
-        zip_buffer.seek(0)
+        ts = utc_now()
+        manifest = build_manifest(
+            tool_key='shuffle',
+            language=None,
+            original_filename=', '.join(filenames),
+            file_type='multiple',
+            row_count=shuffle_report.n_rows,
+            column_mapping={'used_columns': shuffle_report.used_columns},
+            added_columns=[],
+            libraries=[],
+            timestamp=ts,
+            reproducibility={
+                'seed': seed,
+                'parameters': {
+                    'number_of_files': shuffle_report.n_files,
+                    'row_count': shuffle_report.n_rows,
+                    'shuffle_mode': 'synchronized_row_permutation',
+                },
+            },
+        )
+        zip_bytes, zip_name = build_zip(
+            manifest=manifest,
+            main_df=pd.DataFrame(),
+            input_basename='shuffle',
+            output_ext='xlsx',
+            extra_files=extra_files,
+        )
 
         return send_file(
-            zip_buffer,
+            io.BytesIO(zip_bytes),
             mimetype='application/zip',
             as_attachment=True,
-            download_name='shuffled_files.zip'
+            download_name=zip_name,
         )
 
     except ImportError:
