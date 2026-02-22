@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify, send_file, render_template
 from markupsafe import Markup
 from flask_cors import CORS
+from werkzeug.utils import secure_filename
 import pandas as pd
 import io
 import json
@@ -361,7 +362,7 @@ def _build_zip_response(
     """Build a ZIP response for language tool endpoints."""
     ts = timestamp or utc_now()
     ext = ext or _get_output_ext(filename)
-    input_basename = Path(filename).stem
+    input_basename = secure_filename(Path(filename).stem) or 'output'
 
     # Language-agnostic tools should not record a language
     manifest_language = None if tool == 'length' else language
@@ -732,7 +733,7 @@ def parse_columns():
             return jsonify({'error': 'No file provided'}), 400
 
         file = request.files['file']
-        filename = file.filename.lower()
+        filename = secure_filename(file.filename).lower() or 'upload.xlsx'
 
         # Read file into memory
         file_bytes = io.BytesIO(file.read())
@@ -782,7 +783,7 @@ def process_file():
         if not language or not tool:
             return jsonify({'error': 'Language and tool are required'}), 400
 
-        filename = file.filename.lower()
+        filename = secure_filename(file.filename).lower() or 'upload.xlsx'
 
         read_start = time.time()
         file_bytes = io.BytesIO(file.read())
@@ -881,7 +882,7 @@ def process_file_async():
 
         # Read file into memory
         file_bytes = file.read()
-        filename = file.filename.lower()
+        filename = secure_filename(file.filename).lower() or 'upload.xlsx'
 
         # Create job
         job_id = str(uuid.uuid4())
@@ -973,7 +974,7 @@ def _process_file_background(job_id, file_bytes, filename, language, tool, word_
 
         # Build ZIP
         ext = _get_output_ext(filename)
-        input_basename = Path(filename).stem
+        input_basename = secure_filename(Path(filename).stem) or 'output'
         added_cols = _get_added_columns(tool, result_df.columns)
         summary = _compute_summary(tool, result_df)
         ts = utc_now()
@@ -1320,7 +1321,7 @@ def sampling_parse_file():
         if not file.filename:
             return jsonify({'error': 'No file selected'}), 400
 
-        filename = file.filename.lower()
+        filename = secure_filename(file.filename).lower() or 'upload.xlsx'
         file_bytes = io.BytesIO(file.read())
 
         try:
@@ -1426,7 +1427,7 @@ def sampling_stratified():
             return jsonify({'error': 'Stratification column is required'}), 400
 
         # Read file
-        filename = file.filename
+        filename = secure_filename(file.filename) or 'upload.xlsx'
         file_bytes = io.BytesIO(file.read())
         filename_lower = filename.lower()
 
@@ -1506,7 +1507,7 @@ def sampling_stratified():
         sampling_section = build_sampling_manifest_section(report)
 
         ts = utc_now()
-        input_basename = Path(filename).stem
+        input_basename = secure_filename(Path(filename).stem) or 'output'
         manifest = build_manifest(
             tool_key='stratified',
             language=None,

@@ -24,9 +24,10 @@ def make_zip_filename(
     Pattern: ``{basename}__{tool}__{language}__{YYYYMMDDTHHMMSSZ}.zip``
     """
     safe_base = sanitize_basename(input_basename)
+    safe_tool = sanitize_basename(tool)
     ts_str = format_timestamp_filename(timestamp)
     lang = language or "all"
-    return f"{safe_base}__{tool}__{lang}__{ts_str}.zip"
+    return f"{safe_base}__{safe_tool}__{lang}__{ts_str}.zip"
 
 
 def make_output_filename(input_basename: str, ext: str, *, is_sampling: bool = False) -> str:
