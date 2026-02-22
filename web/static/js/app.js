@@ -946,7 +946,7 @@ function initSamplingUI() {
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = response.headers.get('Content-Disposition')?.split('filename=')[1]?.replace(/"/g, '') || 'stratified_sample.xlsx';
+            a.download = response.headers.get('Content-Disposition')?.split('filename=')[1]?.replace(/"/g, '') || 'stratified_sample.zip';
             document.body.appendChild(a);
             a.click();
             a.remove();

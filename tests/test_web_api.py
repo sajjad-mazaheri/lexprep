@@ -6,6 +6,7 @@ import json
 import os
 import sys
 import time
+import zipfile
 
 import pandas as pd
 import pytest
@@ -516,22 +517,40 @@ class TestParseColumns:
 
 
 class TestDownload:
+    def _unzip_enriched(self, resp_data):
+        """Extract the enriched DataFrame from a ZIP response."""
+        zf = zipfile.ZipFile(io.BytesIO(resp_data))
+        names = zf.namelist()
+        assert "run_manifest.json" in names
+        enriched = [n for n in names if "__enriched." in n]
+        assert len(enriched) == 1, f"Expected 1 enriched file, got: {names}"
+        data = zf.read(enriched[0])
+        if enriched[0].endswith(".csv"):
+            return pd.read_csv(io.BytesIO(data))
+        elif enriched[0].endswith(".tsv"):
+            return pd.read_csv(io.BytesIO(data), sep="\t")
+        else:
+            return pd.read_excel(io.BytesIO(data))
+
     def test_csv_download(self, client):
         results = [{"word": "hello", "pronunciation": "HH AH L OW"}]
         resp = client.post("/api/download", json={"results": results, "format": "csv"})
         assert resp.status_code == 200
-        assert "text/csv" in resp.content_type
+        assert "zip" in resp.content_type
+        df = self._unzip_enriched(resp.data)
+        assert "word" in df.columns
 
     def test_xlsx_download(self, client):
         results = [{"word": "hello", "pronunciation": "HH AH L OW"}]
         resp = client.post("/api/download", json={"results": results, "format": "xlsx"})
         assert resp.status_code == 200
+        assert "zip" in resp.content_type
 
     def test_tsv_download(self, client):
         results = [{"word": "hello"}]
         resp = client.post("/api/download", json={"results": results, "format": "tsv"})
         assert resp.status_code == 200
-        assert "tab-separated" in resp.content_type
+        assert "zip" in resp.content_type
 
     def test_empty_results_returns_400(self, client):
         resp = client.post("/api/download", json={"results": [], "format": "csv"})
@@ -544,9 +563,10 @@ class TestDownload:
         ]
         resp = client.post("/api/download", json={"results": results, "format": "csv"})
         assert resp.status_code == 200
-        content = resp.data.decode("utf-8")
-        assert "pos" in content
-        assert "lemma" in content
+        assert "zip" in resp.content_type
+        df = self._unzip_enriched(resp.data)
+        assert "pos" in df.columns
+        assert "lemma" in df.columns
 
 
 # /api/process-file (sync)
@@ -598,7 +618,7 @@ class TestProcessFile:
             "word_column": "word",
         }, content_type="multipart/form-data")
         assert resp.status_code == 200
-        assert "text/csv" in resp.content_type or "spreadsheet" in resp.content_type
+        assert "zip" in resp.content_type
 
     @pytest.mark.skipif(not _has_module("en"), reason="English deps not installed")
     def test_en_syllables_file_txt(self, client):
@@ -800,7 +820,7 @@ class TestSamplingAPI:
             "random_state": "42",
         }, content_type="multipart/form-data")
         assert resp.status_code == 200
-        assert "spreadsheet" in resp.content_type or "excel" in resp.content_type.lower()
+        assert "zip" in resp.content_type
 
     def test_stratified_proportional_allocation(self, client):
         df = pd.DataFrame({"word": [f"w{i}" for i in range(60)], "score": list(range(60))})
