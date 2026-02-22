@@ -53,12 +53,26 @@ lexprep ja pos input.xlsx output.xlsx -c word --method stanza
 ### Sampling
 
 ```bash
-# Stratified sampling
-lexprep sample stratified input.xlsx output.xlsx -s frequency -n 100 -b 3
+# Stratified sampling (outputs ZIP with sample + excluded + audit)
+lexprep sample stratified input.xlsx output.xlsx --score frequency --n 100 --bins 3 --seed 19
 
 # Shuffle multiple files
 lexprep sample shuffle file1.xlsx file2.xlsx output_dir/
 ```
+
+### Length (language-agnostic)
+
+```bash
+# Add length_chars column (Unicode codepoint count)
+lexprep length words.xlsx output.xlsx -c word
+```
+
+
+## Output
+
+All commands output a **ZIP reproducibility pack** containing the enriched data plus a `run_manifest.json` with tool version, parameters, and library versions.
+
+See [METHODS.md](METHODS.md#reproducibility-pack) for details.
 
 
 ## File Formats

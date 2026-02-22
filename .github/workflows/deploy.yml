@@ -22,6 +22,7 @@ jobs:
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           script: |
+            set -e
             cd ${{ secrets.DEPLOY_PATH }}
 
             echo "── Pulling latest code ──"
@@ -35,6 +36,14 @@ jobs:
 
             echo "── Restarting service ──"
             sudo systemctl restart ${{ secrets.DEPLOY_SERVICE }}
+
+            echo "── Waiting for service to start ──"
+            sleep 3
+            if ! sudo systemctl is-active --quiet ${{ secrets.DEPLOY_SERVICE }}; then
+              echo "ERROR: Service failed to start!"
+              sudo journalctl -u ${{ secrets.DEPLOY_SERVICE }} --no-pager -n 20
+              exit 1
+            fi
 
             echo "── Deploy complete ──"
             git log --oneline -1

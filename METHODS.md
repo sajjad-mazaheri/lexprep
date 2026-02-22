@@ -198,10 +198,16 @@ This document explains how each processing method works in lexprep.
 ### Stratified Sampling - `lexprep sample stratified`
 
 **Algorithm**:
-1. Divides data into N quantile bins based on score column
-2. Calculates bin boundaries using pandas `qcut`
-3. Samples proportionally from each bin
-4. Default: equal samples per bin; optional weighted sampling
+1. Divides data into N quantile bins based on score column using pandas `qcut`
+2. Allocates sample quota per bin (default: equal; optional: proportional, optimal, fixed)
+3. Samples rows from each bin with a fixed random seed (default: `--seed 19`)
+4. Adds `bin_id` column to all output rows
+
+**Output ZIP contents** (`{name}__stratified_sampling__all__{ts}.zip`):
+- `{name}__sample.xlsx` — selected rows with `bin_id`
+- `{name}__excluded.xlsx` — non-selected rows with `bin_id`
+- `sampling_audit.xlsx` — per-bin table: population, selected, excluded, allocation method
+- `run_manifest.json` — parameters for exact reproduction
 
 **Use case**: Creating balanced experimental stimuli across frequency ranges.
 
@@ -211,13 +217,82 @@ This document explains how each processing method works in lexprep.
 
 **Algorithm**:
 1. Verifies all files have equal row counts
-2. Generates random permutation of row indices
-3. Applies same permutation to all files
+2. Generates a single random permutation of row indices (fixed `--seed`)
+3. Applies the same permutation to all files simultaneously
 4. Maintains row correspondence across files
+
+**Output ZIP contents** (`shuffle__row_shuffle__all__{ts}.zip`):
+- `{name}_shuffled.{ext}` for each input file
+- `run_manifest.json` — seed and parameters
 
 **Use case**: Randomizing parallel data (e.g., words + translations + audio filenames).
 
 ---
 
+## Universal Tools
+
+### Word Length - `lexprep length`
+
+**Method**: Unicode codepoint count (`len()` in Python 3).
+
+**Algorithm**:
+1. Treats each word as a Python string
+2. Returns `len(word)` — the number of Unicode codepoints
+3. Language-agnostic: works correctly for Arabic-script, CJK, and Latin words
+
+**Output column**: `length_chars`
+**Method tag in manifest**: `"unicode_codepoints"`
+
+**Note**: Codepoint count differs from byte count and grapheme count. For most wordlist
+use cases (frequency banding, stimulus matching) codepoint count is the standard measure.
+
+---
+
+## Reproducibility Pack
+
+Every lexprep command writes a **ZIP file** instead of a plain spreadsheet. The ZIP contains:
+
+| File | Contents |
+|------|----------|
+| `run_manifest.json` | Tool name, version, timestamp (UTC), input filename, added columns, library versions, seed |
+| `{name}__enriched.{ext}` | Original data + added columns (language tools) |
+| `{name}__sample.{ext}` | Selected rows (stratified sampling only) |
+| `{name}__excluded.{ext}` | Non-selected rows (stratified sampling only) |
+| `sampling_audit.xlsx` | Per-bin statistics (stratified sampling only) |
+| `{name}_shuffled.{ext}` | Shuffled files (shuffle only, one per input) |
+
+### ZIP filename format
+
+```
+{input_basename}__{tool}__{language}__{YYYYMMDDTHHMMSSZ}.zip
+```
+
+Example: `wordlist__g2p__fa__20260220T143000Z.zip`
+
+### run_manifest.json example
+
+```json
+{
+  "lexprep_version": "1.0.0",
+  "timestamp_utc": "2026-02-20T14:30:00+00:00",
+  "tool": "g2p",
+  "language": "fa",
+  "citation": { "doi": "10.5281/zenodo.18713755", "...": "..." },
+  "input": {
+    "original_filename": "wordlist.xlsx",
+    "file_type": "xlsx",
+    "row_count": 500,
+    "column_mapping": { "word_column": "word" }
+  },
+  "pipeline": {
+    "added_columns": ["pronunciation", "g2p_error"],
+    "libraries": [{ "name": "PersianG2p", "version": "0.1.5" }]
+  }
+}
+```
+
+For sampling, a `reproducibility` block is added with `seed` and `parameters`, and a `sampling` block with per-bin allocation details.
+
+---
 
 **Note**: Accuracy figures are estimates based on published benchmarks. Actual accuracy may vary depending on your specific data domain.

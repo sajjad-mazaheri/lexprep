@@ -4,7 +4,7 @@
     <strong>Linguistic Data Preparation Toolkit for Wordlists</strong>
   </p>
   <p align="center">
-    G2P - Syllables - POS Tagging - Sampling<br>
+    G2P - Syllables - POS Tagging - Length - Sampling<br>
     Persian - English - Japanese
   </p>
 </p>
@@ -26,7 +26,9 @@
 - **G2P Transcription**: Convert words to phonetic representations
 - **Syllable Counting**: Count syllables using orthographic or phonetic methods
 - **POS Tagging**: Assign part-of-speech tags to words
+- **Length**: Count Unicode codepoints per word (`length_chars`)
 - **Sampling**: Stratified sampling and multi-file shuffling
+- **Reproducibility Pack**: Every command outputs a ZIP with data + `run_manifest.json`
 
 ### Key Difference from Other NLP Tools
 
@@ -42,11 +44,12 @@ Most NLP libraries (spaCy, Stanza, etc.) are designed for **text processing** - 
 
 ## Supported Languages & Tools
 
-| Language | G2P | Syllables | POS |
-|----------|-----|-----------|-----|
-| Persian | PersianG2p | Heuristic | Stanza |
-| English | g2p-en | pyphen | spaCy |
-| Japanese | - | - | Stanza / UniDic |
+| Language | G2P | Syllables | POS | Length |
+|----------|-----|-----------|-----|--------|
+| Persian | PersianG2p | Heuristic | Stanza | ✓ |
+| English | g2p-en | pyphen | spaCy | ✓ |
+| Japanese | - | - | Stanza / UniDic | ✓ |
+| (any) | - | - | - | ✓ |
 
 ---
 
@@ -103,14 +106,41 @@ lexprep ja pos words.xlsx output.xlsx -c word --method stanza
 
 ### Sampling
 ```bash
-# Stratified sampling
-lexprep sample stratified data.xlsx output.xlsx --score-col frequency --n-total 100 --bins 3
+# Stratified sampling — outputs ZIP with sample + excluded + audit
+lexprep sample stratified data.xlsx output.xlsx --score frequency --n 100 --bins 3 --seed 19
 
-# Shuffle multiple files
-lexprep sample shuffle-rows file1.xlsx file2.xlsx output_dir/
+# Shuffle multiple files (synchronized row permutation)
+lexprep sample shuffle file1.xlsx file2.xlsx output_dir/
+```
+
+### Length (language-agnostic)
+```bash
+# Add length_chars column (Unicode codepoint count)
+lexprep length words.xlsx output.xlsx -c word
 ```
 
 ---
+
+## Output Format
+
+Every command produces a **ZIP reproducibility pack** instead of a plain file:
+
+```
+words__g2p__fa__20260220T143000Z.zip
+├── run_manifest.json          ← tool, version, parameters, libraries
+└── words__enriched.xlsx       ← original data + added columns
+```
+
+For sampling:
+```
+data__stratified_sampling__all__20260220T143000Z.zip
+├── run_manifest.json
+├── data__sample.xlsx          ← selected rows with bin_id
+├── data__excluded.xlsx        ← non-selected rows
+└── sampling_audit.xlsx        ← per-bin statistics
+```
+
+The `run_manifest.json` records the exact tool version, timestamp, seed, and library versions used — enabling exact reproduction of any processing step.
 
 ## File Formats
 
@@ -134,7 +164,7 @@ Features:
 - Upload files (Excel, CSV, TSV, TXT)
 - Select language and tool
 - Process wordlists with all available tools
-- Download results automatically
+- Download results as a ZIP reproducibility pack
 - Fast processing with model caching
 
 ---
