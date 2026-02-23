@@ -36,13 +36,13 @@ jobs:
             pip install -r web/requirements.txt --quiet
 
             echo "── Restarting service ──"
-            sudo systemctl restart ${{ secrets.DEPLOY_SERVICE }}
+            sudo -n /usr/bin/systemctl restart ${{ secrets.DEPLOY_SERVICE }}
 
             echo "── Waiting for service to start ──"
             sleep 3
-            if ! sudo systemctl is-active --quiet ${{ secrets.DEPLOY_SERVICE }}; then
+            if ! sudo -n /usr/bin/systemctl is-active ${{ secrets.DEPLOY_SERVICE }}; then
               echo "ERROR: Service failed to start!"
-              sudo journalctl -u ${{ secrets.DEPLOY_SERVICE }} --no-pager -n 20
+              sudo -n /usr/bin/journalctl -u ${{ secrets.DEPLOY_SERVICE }} --no-pager -n 20
               exit 1
             fi
 
