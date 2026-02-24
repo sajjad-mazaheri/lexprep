@@ -1,55 +1,100 @@
-from flask import Flask, request, jsonify, send_file, render_template
-from markupsafe import Markup
-from flask_cors import CORS
-from werkzeug.utils import secure_filename
-import pandas as pd
+import hashlib
+import hmac
 import io
 import json
+import logging
 import os
-import uuid
+import secrets
+import sqlite3
 import threading
+import time as _time
+import uuid
 from datetime import datetime
 from functools import wraps
 from pathlib import Path
-import hashlib
-import hmac
-import sqlite3
-import logging
 
-from lexprep.manifest import build_manifest, get_libraries_for_tool, utc_now
-from lexprep.packaging import build_zip, _df_to_bytes
+import pandas as pd
+from flask import Flask, jsonify, render_template, request, send_file
+from flask_cors import CORS
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+from markupsafe import Markup
+from werkzeug.middleware.proxy_fix import ProxyFix
+from werkzeug.utils import secure_filename
+
 from lexprep.length import LENGTH_METHOD, compute_length_chars, length_distribution
+from lexprep.manifest import build_manifest, get_libraries_for_tool, utc_now
+from lexprep.packaging import _df_to_bytes, build_zip
 
 logger = logging.getLogger(__name__)
 
-# Load environment variables 
+# Load environment variables
 try:
     from dotenv import load_dotenv
     load_dotenv()
 except ImportError:
-
     pass
 
 app = Flask(__name__, static_folder='static', template_folder='templates')
-app.config['JSON_AS_ASCII'] = False  
-CORS(app)
+app.config['JSON_AS_ASCII'] = False
+app.config['SECRET_KEY'] = os.environ.get('FLASK_SECRET_KEY', secrets.token_hex(32))
+app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024  # 10 MB upload limit
 
-# Version
-VERSION = '1.0.0'
+# Trust one level of proxy (nginx/reverse proxy)
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1)
 
+# CORS: restrict to production domain + localhost for development
+_cors_origins = os.environ.get(
+    'CORS_ORIGINS',
+    'https://lexprep.net,http://localhost:5000,http://127.0.0.1:5000',
+).split(',')
+CORS(app, origins=[o.strip() for o in _cors_origins if o.strip()])
+
+# Rate limiting
+limiter = Limiter(
+    get_remote_address,
+    app=app,
+    default_limits=['200 per minute'],
+    storage_uri='memory://',
+    enabled=os.environ.get('LEXPREP_RATE_LIMIT', 'true').lower() != 'false',
+)
+
+# Version (single source of truth: src/lexprep/__init__.py)
+try:
+    from lexprep import __version__
+    VERSION = __version__
+except ImportError:
+    VERSION = '1.0.0'
 
 ADMIN_SECRET = os.environ.get('LEXPREP_ADMIN_SECRET')
 ADMIN_ENABLED = ADMIN_SECRET is not None and len(ADMIN_SECRET) >= 32
 
+# Google Analytics tracking ID (set to empty string to disable)
+GA_TRACKING_ID = os.environ.get('GA_TRACKING_ID', 'G-KH8H8BJF9C')
+
 # Analytics database path
-DB_PATH = os.path.join(os.path.dirname(__file__), 'analytics.db')
+DB_PATH = os.environ.get('LEXPREP_DB_PATH',
+                         os.path.join(os.path.dirname(__file__), 'analytics.db'))
+
+# Input validation allowlists
+VALID_LANGUAGES = {'en', 'fa', 'ja'}
+VALID_TOOLS = {
+    'g2p', 'syllables', 'syllables_phonetic', 'pos',
+    'pos_unidic', 'pos_stanza', 'length',
+}
+
+# Privacy: salted IP hashing (generate once per server lifetime)
+_IP_SALT = os.environ.get('LEXPREP_IP_SALT', secrets.token_hex(16))
+
+# Processing limits
+MAX_WORDS = 5000
 
 
-# Model Preloading and Caching 
-# Cache for loaded models 
+# Model Preloading and Caching
+# Cache for loaded models
 _model_cache = {
     'fa_g2p': None,
-    'fa_g2p_converter': None,  
+    'fa_g2p_converter': None,
     'fa_pos': None,
     'en_g2p': None,
     'en_pos': None,
@@ -86,8 +131,8 @@ def preload_models():
         _warmup_status['loaded'].append('fa_g2p')
         print("[Warmup] Persian G2P loaded")
     except Exception as e:
-        _warmup_status['errors'].append(f'fa_g2p: {str(e)}')
-        print(f"[Warmup] Persian G2P failed: {e}")
+        _warmup_status['errors'].append('fa_g2p: failed to load')
+        logger.exception("Warmup failed for fa_g2p: %s", e)
 
     # Persian POS (Stanza)
     try:
@@ -97,8 +142,8 @@ def preload_models():
         _warmup_status['loaded'].append('fa_pos')
         print("[Warmup] Persian POS loaded (Stanza)")
     except Exception as e:
-        _warmup_status['errors'].append(f'fa_pos: {str(e)}')
-        print(f"[Warmup] Persian POS failed: {e}")
+        _warmup_status['errors'].append('fa_pos: failed to load')
+        logger.exception("Warmup failed for fa_pos: %s", e)
 
     # English G2P
     try:
@@ -108,8 +153,8 @@ def preload_models():
         _warmup_status['loaded'].append('en_g2p')
         print("[Warmup] English G2P loaded")
     except Exception as e:
-        _warmup_status['errors'].append(f'en_g2p: {str(e)}')
-        print(f"[Warmup] English G2P failed: {e}")
+        _warmup_status['errors'].append('en_g2p: failed to load')
+        logger.exception("Warmup failed for en_g2p: %s", e)
 
     # English POS (spaCy)
     try:
@@ -119,8 +164,8 @@ def preload_models():
         _warmup_status['loaded'].append('en_pos')
         print("[Warmup] English POS loaded")
     except Exception as e:
-        _warmup_status['errors'].append(f'en_pos: {str(e)}')
-        print(f"[Warmup] English POS failed: {e}")
+        _warmup_status['errors'].append('en_pos: failed to load')
+        logger.exception("Warmup failed for en_pos: %s", e)
 
     # Japanese UniDic
     try:
@@ -130,8 +175,8 @@ def preload_models():
         _warmup_status['loaded'].append('ja_unidic')
         print("[Warmup] Japanese UniDic loaded")
     except Exception as e:
-        _warmup_status['errors'].append(f'ja_unidic: {str(e)}')
-        print(f"[Warmup] Japanese UniDic failed: {e}")
+        _warmup_status['errors'].append('ja_unidic: failed to load')
+        logger.exception("Warmup failed for ja_unidic: %s", e)
 
     # Japanese Stanza (optional - can be slow)
     try:
@@ -141,8 +186,8 @@ def preload_models():
         _warmup_status['loaded'].append('ja_stanza')
         print("[Warmup] Japanese Stanza loaded")
     except Exception as e:
-        _warmup_status['errors'].append(f'ja_stanza: {str(e)}')
-        print(f"[Warmup] Japanese Stanza failed: {e}")
+        _warmup_status['errors'].append('ja_stanza: failed to load')
+        logger.exception("Warmup failed for ja_stanza: %s", e)
 
     _warmup_status['completed'] = True
     print(f"[Warmup] Complete. Loaded: {_warmup_status['loaded']}")
@@ -166,56 +211,74 @@ _do_auto_warmup()
 # Background job storage for async processing
 _jobs = {}
 _jobs_lock = threading.Lock()
+_JOB_TTL_SECONDS = 1800  # 30 minutes
+
+
+def _cleanup_expired_jobs():
+    """Remove jobs older than TTL to prevent memory exhaustion."""
+    while True:
+        _time.sleep(300)  # Run every 5 minutes
+        now = datetime.now()
+        with _jobs_lock:
+            expired = [
+                jid for jid, job in _jobs.items()
+                if (now - datetime.fromisoformat(job['created_at'])).total_seconds()
+                > _JOB_TTL_SECONDS
+            ]
+            for jid in expired:
+                del _jobs[jid]
+            if expired:
+                logger.info('Cleaned up %d expired jobs', len(expired))
+
+
+_cleanup_thread = threading.Thread(target=_cleanup_expired_jobs, daemon=True)
+_cleanup_thread.start()
 
 
 def init_db():
     """Initialize SQLite database for analytics"""
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    c.execute('''CREATE TABLE IF NOT EXISTS page_views (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        page TEXT,
-        ip_hash TEXT,
-        user_agent TEXT,
-        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-    )''')
-    c.execute('''CREATE TABLE IF NOT EXISTS tool_usage (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        language TEXT,
-        tool TEXT,
-        word_count INTEGER,
-        ip_hash TEXT,
-        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-    )''')
-    conn.commit()
-    conn.close()
-
-
-def get_client_ip():
-    """Get client IP, checking X-Forwarded-For for proxied requests."""
-    forwarded = request.headers.get('X-Forwarded-For', '')
-    if forwarded:
-        # X-Forwarded-For can be a comma-separated list; first is the real client
-        return forwarded.split(',')[0].strip()
-    return request.remote_addr or 'unknown'
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.execute('''CREATE TABLE IF NOT EXISTS page_views (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            page TEXT,
+            ip_hash TEXT,
+            user_agent TEXT,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+        )''')
+        conn.execute('''CREATE TABLE IF NOT EXISTS tool_usage (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            language TEXT,
+            tool TEXT,
+            word_count INTEGER,
+            ip_hash TEXT,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+        )''')
 
 
 def hash_ip(ip):
-    """Hash IP for privacy"""
-    return hashlib.sha256(ip.encode()).hexdigest()[:16]
+    """Hash IP for privacy (salted to prevent brute-force reversal)"""
+    return hashlib.sha256((_IP_SALT + ip).encode()).hexdigest()[:16]
+
+
+# Valid page names for analytics
+_VALID_PAGES = {
+    'home', 'about', 'author', 'contribute', 'references',
+    'accuracy', 'sampling', 'admin', 'unknown',
+}
 
 
 def log_page_view(page):
     """Log a page view"""
     try:
-        ip = get_client_ip()
+        if page not in _VALID_PAGES:
+            page = 'unknown'
+        ip = request.remote_addr or 'unknown'
         ua = request.headers.get('User-Agent', '')[:200]
-        conn = sqlite3.connect(DB_PATH)
-        c = conn.cursor()
-        c.execute('INSERT INTO page_views (page, ip_hash, user_agent) VALUES (?, ?, ?)',
-                  (page, hash_ip(ip), ua))
-        conn.commit()
-        conn.close()
+        with sqlite3.connect(DB_PATH) as conn:
+            conn.execute(
+                'INSERT INTO page_views (page, ip_hash, user_agent) VALUES (?, ?, ?)',
+                (page, hash_ip(ip), ua),
+            )
     except Exception:
         logger.exception('Failed to log page view for page: %s', page)
 
@@ -223,13 +286,12 @@ def log_page_view(page):
 def log_tool_usage(language, tool, word_count):
     """Log tool usage"""
     try:
-        ip = get_client_ip()
-        conn = sqlite3.connect(DB_PATH)
-        c = conn.cursor()
-        c.execute('INSERT INTO tool_usage (language, tool, word_count, ip_hash) VALUES (?, ?, ?, ?)',
-                  (language, tool, word_count, hash_ip(ip)))
-        conn.commit()
-        conn.close()
+        ip = request.remote_addr or 'unknown'
+        with sqlite3.connect(DB_PATH) as conn:
+            conn.execute(
+                'INSERT INTO tool_usage (language, tool, word_count, ip_hash) VALUES (?, ?, ?, ?)',
+                (language, tool, word_count, hash_ip(ip)),
+            )
     except Exception:
         logger.exception('Failed to log tool usage: %s/%s', language, tool)
 
@@ -258,7 +320,12 @@ def admin_required(f):
 init_db()
 
 
-# Page Routes 
+@app.context_processor
+def inject_globals():
+    return {'ga_tracking_id': GA_TRACKING_ID}
+
+
+# Page Routes
 
 @app.route('/')
 def index():
@@ -408,8 +475,9 @@ def test_persian():
             'status': 'ok',
             'results': [{'word': r.word, 'pronunciation': r.pronunciation, 'error': r.error} for r in result]
         })
-    except Exception as e:
-        return jsonify({'status': 'error', 'error': str(e)}), 500
+    except Exception:
+        logger.exception('Error in test_persian')
+        return jsonify({'status': 'error', 'error': 'An internal error occurred'}), 500
 
 
 
@@ -425,32 +493,33 @@ def api_status():
             'started': _warmup_status['started'],
             'completed': _warmup_status['completed'],
             'loaded': _warmup_status['loaded'],
-            'errors': _warmup_status['errors']
+            'error_count': len(_warmup_status['errors'])
         }
     }
 
     try:
         from lexprep.fa.g2p import transcribe_words
         status['modules']['fa'] = 'ok'
-    except ImportError as e:
-        status['modules']['fa'] = str(e)
+    except ImportError:
+        status['modules']['fa'] = 'not installed'
 
     try:
         from lexprep.en.g2p import transcribe_words
         status['modules']['en'] = 'ok'
-    except ImportError as e:
-        status['modules']['en'] = str(e)
+    except ImportError:
+        status['modules']['en'] = 'not installed'
 
     try:
         from lexprep.ja.pos_unidic import tag_with_unidic
         status['modules']['ja'] = 'ok'
-    except ImportError as e:
-        status['modules']['ja'] = str(e)
+    except ImportError:
+        status['modules']['ja'] = 'not installed'
 
     return jsonify(status)
 
 
 @app.route('/api/warmup', methods=['POST'])
+@limiter.limit('5 per hour')
 def warmup():
     """Trigger model warmup - call this after server starts"""
     if _warmup_status['started']:
@@ -458,7 +527,7 @@ def warmup():
             'status': 'already_started',
             'completed': _warmup_status['completed'],
             'loaded': _warmup_status['loaded'],
-            'errors': _warmup_status['errors']
+            'error_count': len(_warmup_status['errors'])
         })
 
     # Run warmup in background thread
@@ -478,7 +547,7 @@ def warmup_status():
         'started': _warmup_status['started'],
         'completed': _warmup_status['completed'],
         'loaded': _warmup_status['loaded'],
-        'errors': _warmup_status['errors']
+        'error_count': len(_warmup_status['errors'])
     })
 
 
@@ -521,6 +590,7 @@ def get_tools():
 
 
 @app.route('/api/process', methods=['POST'])
+@limiter.limit('30 per minute')
 def process_words():
     """Process word list with selected tool"""
     try:
@@ -535,8 +605,13 @@ def process_words():
         if not words:
             return jsonify({'error': 'No words provided'}), 400
 
-        if not language or not tool:
-            return jsonify({'error': 'Language and tool are required'}), 400
+        if len(words) > MAX_WORDS:
+            return jsonify({'error': f'Maximum {MAX_WORDS} words allowed per request'}), 400
+
+        if language not in VALID_LANGUAGES:
+            return jsonify({'error': 'Invalid language'}), 400
+        if tool not in VALID_TOOLS:
+            return jsonify({'error': 'Invalid tool'}), 400
 
         # Log usage
         log_tool_usage(language, tool, len(words))
@@ -617,8 +692,8 @@ def process_words():
 
         elif language == 'ja':
             if tool == 'pos_unidic':
-                from lexprep.ja.pos_unidic import tag_with_unidic
                 from lexprep.ja.pos_map import map_pos_to_english
+                from lexprep.ja.pos_unidic import tag_with_unidic
                 tags = tag_with_unidic(words)
                 for i, w in enumerate(words):
                     r = tags[i]
@@ -646,10 +721,12 @@ def process_words():
 
         return jsonify({'results': results, 'count': len(results)})
 
-    except ImportError as e:
-        return jsonify({'error': f'Language module not installed: {str(e)}'}), 400
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+    except ImportError:
+        logger.exception('Missing language module')
+        return jsonify({'error': 'Required language module is not installed'}), 400
+    except Exception:
+        logger.exception('Error in process_words')
+        return jsonify({'error': 'An error occurred while processing. Please try again.'}), 500
 
 
 def process_persian_pos(words):
@@ -719,11 +796,9 @@ def download_results():
             download_name=zip_name,
         )
 
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-
-# ============== File Processing API ==============
+    except Exception:
+        logger.exception('Error in download_results')
+        return jsonify({'error': 'An error occurred while generating the download'}), 500
 
 @app.route('/api/parse-columns', methods=['POST'])
 def parse_columns():
@@ -755,19 +830,20 @@ def parse_columns():
 
         return jsonify({'columns': columns, 'suggested': suggested})
 
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+    except Exception:
+        logger.exception('Error in parse_columns')
+        return jsonify({'error': 'Could not parse file columns'}), 500
 
 
 @app.route('/api/process-file', methods=['POST'])
+@limiter.limit('10 per minute')
 def process_file():
     """Process uploaded wordlist file"""
-    import sys
     import time
     start_time = time.time()
 
     try:
-        print(f"[API] process-file called", file=sys.stderr, flush=True)
+        logger.debug("process-file called")
 
         if 'file' not in request.files:
             return jsonify({'error': 'No file provided'}), 400
@@ -777,11 +853,12 @@ def process_file():
         tool = request.form.get('tool', '')
         word_column = request.form.get('word_column', 'word')
 
-        print(f"[API] Language: {language}, Tool: {tool}, Cached models: fa_g2p={_model_cache.get('fa_g2p_converter') is not None}", file=sys.stderr, flush=True)
-        print(f"[API] language={language}, tool={tool}, word_column={word_column}", file=sys.stderr, flush=True)
+        logger.debug("process-file: language=%s, tool=%s, word_column=%s", language, tool, word_column)
 
-        if not language or not tool:
-            return jsonify({'error': 'Language and tool are required'}), 400
+        if language not in VALID_LANGUAGES:
+            return jsonify({'error': 'Invalid language'}), 400
+        if tool not in VALID_TOOLS:
+            return jsonify({'error': 'Invalid tool'}), 400
 
         filename = secure_filename(file.filename).lower() or 'upload.xlsx'
 
@@ -812,12 +889,12 @@ def process_file():
         words = [w for w in words if w and w != 'nan' and w.strip()]
 
         read_time = time.time() - read_start
-        print(f"[API] File read completed in {read_time:.2f}s", file=sys.stderr, flush=True)
+        logger.debug("File read completed in %.2fs", read_time)
 
         if not words:
             return jsonify({'error': 'No words found in file'}), 400
 
-        print(f"[API] Processing {len(words)} words with {language}/{tool}", file=sys.stderr, flush=True)
+        logger.debug("Processing %d words with %s/%s", len(words), language, tool)
 
         # Log usage
         log_tool_usage(language, tool, len(words))
@@ -826,7 +903,7 @@ def process_file():
         process_start = time.time()
         results = process_words_batch(words, language, tool)
         process_time = time.time() - process_start
-        print(f"[API] Finished in {process_time:.2f}s", file=sys.stderr, flush=True)
+        logger.debug("Finished in %.2fs", process_time)
 
         # Add results to dataframe
         result_df = pd.DataFrame(results)
@@ -840,7 +917,7 @@ def process_file():
         # Build ZIP response
         ext = _get_output_ext(filename)
         total_time = time.time() - start_time
-        print(f"[API] Complete in {total_time:.2f}s", file=sys.stderr, flush=True)
+        logger.debug("Complete in %.2fs", total_time)
 
         response = _build_zip_response(
             tool=tool, language=language, filename=file.filename,
@@ -851,21 +928,18 @@ def process_file():
         response.headers['Access-Control-Expose-Headers'] = 'X-Word-Count, Content-Disposition'
         return response
 
-    except ImportError as e:
-        print(f"[API] ImportError: {e}", file=sys.stderr, flush=True)
-        import traceback
-        traceback.print_exc(file=sys.stderr)
-        return jsonify({'error': f'Language module not installed: {str(e)}'}), 400
-    except Exception as e:
-        print(f"[API] Exception: {e}", file=sys.stderr, flush=True)
-        import traceback
-        traceback.print_exc(file=sys.stderr)
-        return jsonify({'error': str(e)}), 500
+    except ImportError:
+        logger.exception("ImportError in process_file")
+        return jsonify({'error': 'Required language module is not installed'}), 400
+    except Exception:
+        logger.exception("Error in process_file")
+        return jsonify({'error': 'An error occurred while processing the file'}), 500
 
 
 # ============== Async Processing API ==============
 
 @app.route('/api/process-file-async', methods=['POST'])
+@limiter.limit('10 per minute')
 def process_file_async():
     """Start async file processing - returns job ID for polling"""
     try:
@@ -877,8 +951,10 @@ def process_file_async():
         tool = request.form.get('tool', '')
         word_column = request.form.get('word_column', 'word')
 
-        if not language or not tool:
-            return jsonify({'error': 'Language and tool are required'}), 400
+        if language not in VALID_LANGUAGES:
+            return jsonify({'error': 'Invalid language'}), 400
+        if tool not in VALID_TOOLS:
+            return jsonify({'error': 'Invalid tool'}), 400
 
         # Read file into memory
         file_bytes = file.read()
@@ -910,8 +986,9 @@ def process_file_async():
             'poll_url': f'/api/job/{job_id}'
         })
 
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+    except Exception:
+        logger.exception("Error in process_file_async")
+        return jsonify({'error': 'An error occurred while starting the job'}), 500
 
 
 def _process_file_background(job_id, file_bytes, filename, language, tool, word_column):
@@ -1010,16 +1087,21 @@ def _process_file_background(job_id, file_bytes, filename, language, tool, word_
                 'word_count': len(words)
             }
 
-    except Exception as e:
+    except Exception:
+        logger.exception("Error in background job %s", job_id)
         with _jobs_lock:
             _jobs[job_id]['status'] = 'failed'
-            _jobs[job_id]['error'] = str(e)
-            _jobs[job_id]['message'] = f'Error: {str(e)}'
+            _jobs[job_id]['error'] = 'An error occurred during processing'
+            _jobs[job_id]['message'] = 'Processing failed'
 
 
 @app.route('/api/job/<job_id>', methods=['GET'])
 def get_job_status(job_id):
     """Get job status"""
+    try:
+        uuid.UUID(job_id)
+    except ValueError:
+        return jsonify({'error': 'Invalid job ID'}), 400
     with _jobs_lock:
         if job_id not in _jobs:
             return jsonify({'error': 'Job not found'}), 404
@@ -1037,6 +1119,10 @@ def get_job_status(job_id):
 @app.route('/api/job/<job_id>/download', methods=['GET'])
 def download_job_result(job_id):
     """Download completed job result"""
+    try:
+        uuid.UUID(job_id)
+    except ValueError:
+        return jsonify({'error': 'Invalid job ID'}), 400
     with _jobs_lock:
         if job_id not in _jobs:
             return jsonify({'error': 'Job not found'}), 404
@@ -1060,11 +1146,10 @@ def download_job_result(job_id):
 
 
 def process_words_batch(words, language, tool):
-    import sys
     import time
     results = []
 
-    print(f"Processing {len(words)} words", file=sys.stderr, flush=True)
+    logger.debug("Processing %d words", len(words))
 
     if language == 'fa':
         if tool == 'g2p':
@@ -1097,10 +1182,10 @@ def process_words_batch(words, language, tool):
                             })
 
                     chunk_time = time.time() - chunk_start
-                    print(f"Chunk {chunk_num}/{total_chunks} done ({chunk_time:.2f}s)", file=sys.stderr, flush=True)
+                    logger.debug("Chunk %d/%d done (%.2fs)", chunk_num, total_chunks, chunk_time)
             else:
                 # Fall back to creating new converter (slower)
-                print(f"[Batch] No cached converter, loading fresh (this may be slow)...", file=sys.stderr, flush=True)
+                logger.debug("No cached converter, loading fresh (this may be slow)...")
                 from lexprep.fa.g2p import transcribe_words
                 transcriptions = transcribe_words(words)
                 for i, w in enumerate(words):
@@ -1110,7 +1195,7 @@ def process_words_batch(words, language, tool):
                         'pronunciation': r.pronunciation if r else '',
                         'error': r.error or '' if r else ''
                     })
-            print(f"[Batch] Got {len(results)} transcriptions", file=sys.stderr, flush=True)
+            logger.debug("Got %d transcriptions", len(results))
         elif tool == 'syllables':
             from lexprep.fa.syllables import syllabify_orthographic
             for w in words:
@@ -1122,12 +1207,12 @@ def process_words_batch(words, language, tool):
                 })
         elif tool == 'syllables_phonetic':
             from lexprep.fa.syllables import count_syllables_from_pronunciation
-            print(f"[Batch] Persian syllables (phonetic) processing...", file=sys.stderr, flush=True)
+            logger.debug("Persian syllables (phonetic) processing...")
 
             # Use cached converter if available
             converter = _model_cache.get('fa_g2p_converter')
             if converter:
-                print(f"[Batch] Using cached G2P converter...", file=sys.stderr, flush=True)
+                logger.debug("Using cached G2P converter...")
 
                 # Process in chunks with progress reporting
                 chunk_size = 25
@@ -1149,7 +1234,7 @@ def process_words_batch(words, language, tool):
                                 'pronunciation': pron,
                                 'syllable_count': count
                             })
-                        except Exception as e:
+                        except Exception:
                             results.append({
                                 'word': word,
                                 'pronunciation': '',
@@ -1157,10 +1242,10 @@ def process_words_batch(words, language, tool):
                             })
 
                     chunk_time = time.time() - chunk_start
-                    print(f"[Batch] Chunk {chunk_num}/{total_chunks}: {len(chunk)} words in {chunk_time:.2f}s", file=sys.stderr, flush=True)
+                    logger.debug("Chunk %d/%d: %d words in %.2fs", chunk_num, total_chunks, len(chunk), chunk_time)
             else:
                 # Fall back to creating new converter
-                print(f"[Batch] No cached converter, loading fresh...", file=sys.stderr, flush=True)
+                logger.debug("No cached converter, loading fresh...")
                 from lexprep.fa.g2p import transcribe_words
                 transcriptions = transcribe_words(words)
                 for i, w in enumerate(words):
@@ -1172,7 +1257,7 @@ def process_words_batch(words, language, tool):
                         'pronunciation': pron,
                         'syllable_count': count
                     })
-            print(f"[Batch] Processed {len(results)} words", file=sys.stderr, flush=True)
+            logger.debug("Processed %d words", len(results))
         elif tool == 'pos':
             results = process_persian_pos(words)
 
@@ -1209,8 +1294,8 @@ def process_words_batch(words, language, tool):
 
     elif language == 'ja':
         if tool == 'pos_unidic':
-            from lexprep.ja.pos_unidic import tag_with_unidic
             from lexprep.ja.pos_map import map_pos_to_english
+            from lexprep.ja.pos_unidic import tag_with_unidic
             tags = tag_with_unidic(words)
             for i, w in enumerate(words):
                 r = tags[i] if i < len(tags) else None
@@ -1247,52 +1332,65 @@ def process_words_batch(words, language, tool):
 def admin_stats():
     """Get analytics statistics"""
     try:
-        conn = sqlite3.connect(DB_PATH)
-        c = conn.cursor()
+        with sqlite3.connect(DB_PATH) as conn:
+            c = conn.cursor()
 
-        # Total page views
-        c.execute('SELECT COUNT(*) FROM page_views')
-        total_views = c.fetchone()[0]
+            # Total page views
+            c.execute('SELECT COUNT(*) FROM page_views')
+            total_views = c.fetchone()[0]
 
-        # Views per page
-        c.execute('SELECT page, COUNT(*) as count FROM page_views GROUP BY page ORDER BY count DESC')
-        views_by_page = dict(c.fetchall())
+            # Views per page
+            c.execute('SELECT page, COUNT(*) as count FROM page_views GROUP BY page ORDER BY count DESC')
+            views_by_page = dict(c.fetchall())
 
-        # Unique visitors (by IP hash)
-        c.execute('SELECT COUNT(DISTINCT ip_hash) FROM page_views')
-        unique_visitors = c.fetchone()[0]
+            # Unique visitors (by IP hash)
+            c.execute('SELECT COUNT(DISTINCT ip_hash) FROM page_views')
+            unique_visitors = c.fetchone()[0]
 
-        # Tool usage stats
-        c.execute('SELECT language, tool, COUNT(*) as count, SUM(word_count) as total_words FROM tool_usage GROUP BY language, tool ORDER BY count DESC')
-        tool_stats = []
-        for row in c.fetchall():
-            tool_stats.append({
-                'language': row[0],
-                'tool': row[1],
-                'usage_count': row[2],
-                'total_words': row[3]
-            })
+            # Tool usage stats
+            c.execute('SELECT language, tool, COUNT(*) as count, SUM(word_count) as total_words FROM tool_usage GROUP BY language, tool ORDER BY count DESC')
+            tool_stats = []
+            for row in c.fetchall():
+                tool_stats.append({
+                    'language': row[0],
+                    'tool': row[1],
+                    'usage_count': row[2],
+                    'total_words': row[3]
+                })
 
-        # Recent activity (last 7 days)
-        c.execute('''SELECT DATE(timestamp) as date, COUNT(*) as count
-                     FROM page_views
-                     WHERE timestamp >= datetime('now', '-7 days')
-                     GROUP BY DATE(timestamp)
-                     ORDER BY date DESC''')
-        daily_views = [{'date': row[0], 'views': row[1]} for row in c.fetchall()]
+            # Recent activity (last 7 days)
+            c.execute('''SELECT DATE(timestamp) as date, COUNT(*) as count
+                         FROM page_views
+                         WHERE timestamp >= datetime('now', '-7 days')
+                         GROUP BY DATE(timestamp)
+                         ORDER BY date DESC''')
+            daily_views = [{'date': row[0], 'views': row[1]} for row in c.fetchall()]
 
-        conn.close()
+            # Daily tool usage (last 7 days)
+            c.execute('''SELECT DATE(timestamp) as date,
+                                COUNT(*) as usage_count,
+                                COALESCE(SUM(word_count), 0) as total_words
+                         FROM tool_usage
+                         WHERE timestamp >= datetime('now', '-7 days')
+                         GROUP BY DATE(timestamp)
+                         ORDER BY date DESC''')
+            daily_tool_usage = [
+                {'date': row[0], 'usage_count': row[1], 'total_words': row[2]}
+                for row in c.fetchall()
+            ]
 
         return jsonify({
             'total_views': total_views,
             'unique_visitors': unique_visitors,
             'views_by_page': views_by_page,
             'tool_stats': tool_stats,
-            'daily_views': daily_views
+            'daily_views': daily_views,
+            'daily_tool_usage': daily_tool_usage,
         })
 
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+    except Exception:
+        logger.exception('Error in admin_stats')
+        return jsonify({'error': 'An internal error occurred'}), 500
 
 
 @app.route('/api/track', methods=['POST'])
@@ -1311,6 +1409,7 @@ def track_event():
 # ============== Sampling API ==============
 
 @app.route('/api/sampling/parse-file', methods=['POST'])
+@limiter.limit('20 per minute')
 def sampling_parse_file():
     """Parse uploaded file and return columns with numeric detection"""
     try:
@@ -1333,8 +1432,9 @@ def sampling_parse_file():
                 df = pd.read_excel(file_bytes)
             else:
                 return jsonify({'error': 'Unsupported file format. Use CSV, TSV, or Excel files.'}), 400
-        except Exception as read_error:
-            return jsonify({'error': f'Could not read file: {str(read_error)}'}), 400
+        except Exception:
+            logger.exception('Could not read file in sampling_parse_file')
+            return jsonify({'error': 'Could not read file'}), 400
 
         if len(df.columns) == 0:
             return jsonify({'error': 'File appears to be empty or has no columns'}), 400
@@ -1393,13 +1493,13 @@ def sampling_parse_file():
             'filename': file.filename
         })
 
-    except Exception as e:
-        import traceback
-        traceback.print_exc()  # Print to server logs for debugging
-        return jsonify({'error': f'Error processing file: {str(e)}'}), 500
+    except Exception:
+        logger.exception('Error in sampling_parse_file')
+        return jsonify({'error': 'An error occurred while processing the file'}), 500
 
 
 @app.route('/api/sampling/stratified', methods=['POST'])
+@limiter.limit('10 per minute')
 def sampling_stratified():
     """Stratified sampling - supports both quantile and custom range modes"""
     try:
@@ -1448,7 +1548,10 @@ def sampling_stratified():
             except json.JSONDecodeError:
                 return jsonify({'error': 'Invalid ranges format'}), 400
 
-            from lexprep.sampling.stratified import stratified_sample_custom_ranges_full, CustomRange
+            from lexprep.sampling.stratified import (
+                CustomRange,
+                stratified_sample_custom_ranges_full,
+            )
 
             ranges = []
             for r in ranges_data:
@@ -1547,13 +1650,16 @@ def sampling_stratified():
 
         return response
 
-    except ImportError as e:
-        return jsonify({'error': f'Sampling module not installed: {e}'}), 400
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+    except ImportError:
+        logger.exception('Sampling module not installed')
+        return jsonify({'error': 'Sampling module not installed'}), 400
+    except Exception:
+        logger.exception('Error in sampling_stratified')
+        return jsonify({'error': 'An error occurred during sampling'}), 500
 
 
 @app.route('/api/sampling/shuffle', methods=['POST'])
+@limiter.limit('10 per minute')
 def sampling_shuffle():
     """Shuffle rows across multiple files - returns ZIP with all shuffled files"""
     try:
@@ -1568,9 +1674,10 @@ def sampling_shuffle():
         # Read all files
         dfs = []
         filenames = []
-        for file in files:
-            filename_lower = file.filename.lower()
-            filenames.append(file.filename)
+        for i, file in enumerate(files):
+            safe_name = secure_filename(file.filename) or f'file_{i}.xlsx'
+            filename_lower = safe_name.lower()
+            filenames.append(safe_name)
             file_bytes = io.BytesIO(file.read())
 
             if filename_lower.endswith('.csv'):
@@ -1639,9 +1746,21 @@ def sampling_shuffle():
         )
 
     except ImportError:
-        return jsonify({'error': 'Sampling module not installed. Install lexprep with: pip install lexprep'}), 400
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': 'Sampling module not installed'}), 400
+    except Exception:
+        logger.exception('Error in sampling_shuffle')
+        return jsonify({'error': 'An error occurred during shuffle'}), 500
+
+
+# ============== Security Headers ==============
+
+@app.after_request
+def set_security_headers(response):
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['X-Frame-Options'] = 'SAMEORIGIN'
+    response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+    response.headers['X-XSS-Protection'] = '0'
+    return response
 
 
 if __name__ == '__main__':
@@ -1659,4 +1778,8 @@ if __name__ == '__main__':
     print("[Server] Starting Flask on http://127.0.0.1:5000")
     print("[Server] Logs will appear below when requests are received")
     sys.stdout.flush()
-    app.run(debug=True, port=5000, use_reloader=True)
+    app.run(
+        debug=os.environ.get('FLASK_DEBUG', 'false').lower() == 'true',
+        port=5000,
+        use_reloader=os.environ.get('FLASK_DEBUG', 'false').lower() == 'true',
+    )
