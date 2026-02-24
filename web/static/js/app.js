@@ -287,9 +287,9 @@ function renderLanguages() {
 
     elements.languageGrid.innerHTML = Object.entries(state.tools)
         .map(([code, lang]) => `
-            <button class="language-btn" data-lang="${code}">
-                <img src="${lang.flag}" alt="${code}" class="flag-icon">
-                <span class="name">${lang.name}</span>
+            <button class="language-btn" data-lang="${escapeHtml(code)}">
+                <img src="${escapeHtml(lang.flag)}" alt="${escapeHtml(code)}" class="flag-icon">
+                <span class="name">${escapeHtml(lang.name)}</span>
             </button>
         `)
         .join('');
@@ -331,9 +331,9 @@ function renderTools() {
     const lang = state.tools[state.selectedLanguage];
     elements.toolGrid.innerHTML = Object.entries(lang.tools)
         .map(([code, tool]) => `
-            <button class="tool-btn" data-tool="${code}">
-                <span class="name">${tool.name}</span>
-                <span class="description">${tool.description}</span>
+            <button class="tool-btn" data-tool="${escapeHtml(code)}">
+                <span class="name">${escapeHtml(tool.name)}</span>
+                <span class="description">${escapeHtml(tool.description)}</span>
             </button>
         `)
         .join('');

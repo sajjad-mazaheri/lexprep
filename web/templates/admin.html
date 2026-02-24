@@ -59,7 +59,7 @@
                         Visitor analytics (sessions, demographics, traffic sources) are tracked via GA4.
                         Tool-specific usage data below is tracked internally.
                     </p>
-                    <a href="https://analytics.google.com/analytics/web/#/p/G-KH8H8BJF9C" target="_blank" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 8px;">
+                    <a href="https://analytics.google.com/analytics/web/" target="_blank" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 8px;">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                             <path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/>
                         </svg>
@@ -126,7 +126,9 @@
                             <thead>
                                 <tr>
                                     <th>Date</th>
-                                    <th>Views</th>
+                                    <th>Page Views</th>
+                                    <th>Tool Uses</th>
+                                    <th>Words Processed</th>
                                 </tr>
                             </thead>
                             <tbody id="dailyViewsBody">
@@ -163,7 +165,7 @@
     <script>
         // Admin Panel Logic
         const adminState = {
-            secret: localStorage.getItem('adminSecret') || ''
+            secret: sessionStorage.getItem('adminSecret') || ''
         };
 
         const adminElements = {
@@ -195,7 +197,7 @@
             }
 
             adminState.secret = secret;
-            localStorage.setItem('adminSecret', secret);
+            sessionStorage.setItem('adminSecret', secret);
             await loadDashboard();
         });
 
@@ -209,7 +211,7 @@
         // Logout handler
         adminElements.logoutBtn.addEventListener('click', () => {
             adminState.secret = '';
-            localStorage.removeItem('adminSecret');
+            sessionStorage.removeItem('adminSecret');
             adminElements.loginSection.style.display = 'block';
             adminElements.dashboardSection.style.display = 'none';
             adminElements.adminSecret.value = '';
@@ -259,20 +261,34 @@
                     `)
                     .join('') || '<tr><td colspan="4" style="text-align: center; color: var(--gray-500);">No data yet</td></tr>';
 
-                // Render daily views
-                adminElements.dailyViewsBody.innerHTML = data.daily_views
-                    .map(day => `
+                // Render daily activity (merged views + tool usage)
+                const dailyMap = {};
+                for (const day of data.daily_views) {
+                    dailyMap[day.date] = { views: day.views, usage: 0, words: 0 };
+                }
+                for (const day of (data.daily_tool_usage || [])) {
+                    if (!dailyMap[day.date]) {
+                        dailyMap[day.date] = { views: 0, usage: 0, words: 0 };
+                    }
+                    dailyMap[day.date].usage = day.usage_count;
+                    dailyMap[day.date].words = day.total_words;
+                }
+                const sortedDates = Object.keys(dailyMap).sort().reverse();
+                adminElements.dailyViewsBody.innerHTML = sortedDates
+                    .map(date => `
                         <tr>
-                            <td>${escapeHtml(day.date)}</td>
-                            <td>${formatNumber(day.views)}</td>
+                            <td>${escapeHtml(date)}</td>
+                            <td>${formatNumber(dailyMap[date].views)}</td>
+                            <td>${formatNumber(dailyMap[date].usage)}</td>
+                            <td>${formatNumber(dailyMap[date].words)}</td>
                         </tr>
                     `)
-                    .join('') || '<tr><td colspan="2" style="text-align: center; color: var(--gray-500);">No data yet</td></tr>';
+                    .join('') || '<tr><td colspan="4" style="text-align: center; color: var(--gray-500);">No data yet</td></tr>';
 
             } catch (error) {
                 console.error('Dashboard load error:', error);
                 adminState.secret = '';
-                localStorage.removeItem('adminSecret');
+                sessionStorage.removeItem('adminSecret');
                 adminElements.loginSection.style.display = 'block';
                 adminElements.dashboardSection.style.display = 'none';
                 window.lexprep.showToast('Invalid credentials or server error', 'error');
