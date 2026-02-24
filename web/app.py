@@ -11,7 +11,6 @@ import time as _time
 import uuid
 from datetime import datetime
 from functools import wraps
-from pathlib import Path
 
 import pandas as pd
 from flask import Flask, jsonify, render_template, request, send_file
@@ -394,7 +393,7 @@ def admin():
 
 def _get_output_ext(filename):
     """Determine output file extension from input filename."""
-    ext = Path(filename).suffix.lstrip('.').lower()
+    ext = filename.rsplit('.', 1)[-1].lower() if '.' in filename else ''
     return ext if ext in ('csv', 'tsv') else 'xlsx'
 
 
@@ -428,8 +427,9 @@ def _build_zip_response(
 ):
     """Build a ZIP response for language tool endpoints."""
     ts = timestamp or utc_now()
+    filename = secure_filename(filename) or 'upload.xlsx'
     ext = ext or _get_output_ext(filename)
-    input_basename = secure_filename(Path(filename).stem) or 'output'
+    input_basename = secure_filename(filename.rsplit('.', 1)[0]) or 'output'
 
     # Language-agnostic tools should not record a language
     manifest_language = None if tool == 'length' else language
@@ -441,7 +441,7 @@ def _build_zip_response(
         tool_key=tool,
         language=manifest_language,
         original_filename=filename,
-        file_type=Path(filename).suffix.lstrip('.'),
+        file_type=filename.rsplit('.', 1)[-1] if '.' in filename else 'xlsx',
         row_count=len(df),
         column_mapping={'word_column': word_column},
         added_columns=added_cols,
@@ -920,7 +920,7 @@ def process_file():
         logger.debug("Complete in %.2fs", total_time)
 
         response = _build_zip_response(
-            tool=tool, language=language, filename=file.filename,
+            tool=tool, language=language, filename=filename,
             word_column=word_column, df=df, output_df=output_df,
             result_df=result_df, ext=ext,
         )
@@ -1051,7 +1051,7 @@ def _process_file_background(job_id, file_bytes, filename, language, tool, word_
 
         # Build ZIP
         ext = _get_output_ext(filename)
-        input_basename = secure_filename(Path(filename).stem) or 'output'
+        input_basename = secure_filename(filename.rsplit('.', 1)[0]) or 'output'
         added_cols = _get_added_columns(tool, result_df.columns)
         summary = _compute_summary(tool, result_df)
         ts = utc_now()
@@ -1061,7 +1061,7 @@ def _process_file_background(job_id, file_bytes, filename, language, tool, word_
             tool_key=tool,
             language=manifest_language,
             original_filename=filename,
-            file_type=Path(filename).suffix.lstrip('.'),
+            file_type=filename.rsplit('.', 1)[-1] if '.' in filename else 'xlsx',
             row_count=len(df),
             column_mapping={'word_column': word_column},
             added_columns=added_cols,
@@ -1610,12 +1610,12 @@ def sampling_stratified():
         sampling_section = build_sampling_manifest_section(report)
 
         ts = utc_now()
-        input_basename = secure_filename(Path(filename).stem) or 'output'
+        input_basename = secure_filename(filename.rsplit('.', 1)[0]) or 'output'
         manifest = build_manifest(
             tool_key='stratified',
             language=None,
             original_filename=filename,
-            file_type=Path(filename).suffix.lstrip('.'),
+            file_type=filename.rsplit('.', 1)[-1] if '.' in filename else 'xlsx',
             row_count=len(df),
             column_mapping={'score_column': score_col},
             added_columns=['bin_id'],
