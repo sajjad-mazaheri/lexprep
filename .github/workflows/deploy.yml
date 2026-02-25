@@ -30,16 +30,40 @@ jobs:
             git fetch origin main
             git reset --hard origin/main
 
-            echo "── Installing dependencies ──"
+            echo "── Preparing virtual environment ──"
+            PYVER=$(python3 -c "import sys;print(f'{sys.version_info.major}.{sys.version_info.minor}')")
+            echo "System Python: $PYVER"
+
+            # Recreate venv when Python version changes or marker file missing
+            MARKER=".venv/.pyver"
+            if [ ! -f "$MARKER" ] || [ "$(cat "$MARKER")" != "$PYVER" ]; then
+              echo "Recreating venv (clean install)..."
+              python3 -m venv .venv --clear
+              echo "$PYVER" > "$MARKER"
+            fi
             source .venv/bin/activate
             python -m pip install --upgrade "pip>=24" "setuptools>=75" wheel --quiet
+
+            echo "── Installing dependencies ──"
+            # Force numpy>=2 constraint 
+            NUMPY_CONSTRAINT=$(mktemp)
+            echo "numpy>=2.0" > "$NUMPY_CONSTRAINT"
+
             if [ -f requirements.lock ]; then
-              python -m pip install --only-binary=numpy --prefer-binary -c requirements.lock -e ".[fa,en,ja]" --quiet
-              python -m pip install --prefer-binary -c requirements.lock -r web/requirements.txt --quiet
+              python -m pip install --prefer-binary \
+                -c requirements.lock -c "$NUMPY_CONSTRAINT" \
+                -e ".[fa,en,ja]" --quiet
+              python -m pip install --prefer-binary \
+                -c requirements.lock \
+                -r web/requirements.txt --quiet
             else
-              python -m pip install --only-binary=numpy --prefer-binary -e ".[fa,en,ja]" --quiet
-              python -m pip install --prefer-binary -r web/requirements.txt --quiet
+              python -m pip install --prefer-binary \
+                -c "$NUMPY_CONSTRAINT" \
+                -e ".[fa,en,ja]" --quiet
+              python -m pip install --prefer-binary \
+                -r web/requirements.txt --quiet
             fi
+            rm -f "$NUMPY_CONSTRAINT"
 
             echo "── Ensuring NLP resources ──"
             python -c "import nltk; nltk.download('averaged_perceptron_tagger_eng', quiet=True); nltk.download('cmudict', quiet=True)"
