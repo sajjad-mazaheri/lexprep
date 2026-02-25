@@ -45,25 +45,34 @@ jobs:
             python -m pip install --upgrade "pip>=24" "setuptools>=75" wheel --quiet
 
             echo "── Installing dependencies ──"
-            # Force numpy>=2 constraint 
-            NUMPY_CONSTRAINT=$(mktemp)
-            echo "numpy>=2.0" > "$NUMPY_CONSTRAINT"
+            # Install extras one-by-one so failures are isolated and diagnostic.
+            CONSTRAINTS=$(mktemp)
+            echo "numpy>=2.0" >> "$CONSTRAINTS"
+            echo "setuptools>=75" >> "$CONSTRAINTS"
+            cat "$CONSTRAINTS"
 
-            if [ -f requirements.lock ]; then
-              python -m pip install --prefer-binary \
-                -c requirements.lock -c "$NUMPY_CONSTRAINT" \
-                -e ".[fa,en,ja]" --quiet
-              python -m pip install --prefer-binary \
-                -c requirements.lock \
-                -r web/requirements.txt --quiet
-            else
-              python -m pip install --prefer-binary \
-                -c "$NUMPY_CONSTRAINT" \
-                -e ".[fa,en,ja]" --quiet
-              python -m pip install --prefer-binary \
-                -r web/requirements.txt --quiet
-            fi
-            rm -f "$NUMPY_CONSTRAINT"
+            echo "── Installing [en] extras ──"
+            python -m pip install --prefer-binary \
+              -c "$CONSTRAINTS" \
+              -e ".[en]" 2>&1 || { echo "FAILED: .[en]"; exit 1; }
+
+            echo "── Installing [ja] extras ──"
+            python -m pip install --prefer-binary \
+              -c "$CONSTRAINTS" \
+              -e ".[ja]" 2>&1 || { echo "FAILED: .[ja]"; exit 1; }
+
+            echo "── Installing [fa] extras ──"
+            python -m pip install --prefer-binary \
+              -c "$CONSTRAINTS" \
+              -e ".[fa]" 2>&1 || { echo "FAILED: .[fa]"; exit 1; }
+
+            echo "── Installing web requirements ──"
+            python -m pip install --prefer-binary \
+              -r web/requirements.txt --quiet 2>&1 || { echo "FAILED: web/requirements.txt"; exit 1; }
+
+            rm -f "$CONSTRAINTS"
+            echo "── pip check ──"
+            python -m pip check || true
 
             echo "── Ensuring NLP resources ──"
             python -c "import nltk; nltk.download('averaged_perceptron_tagger_eng', quiet=True); nltk.download('cmudict', quiet=True)"
