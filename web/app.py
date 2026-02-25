@@ -4,6 +4,7 @@ import io
 import json
 import logging
 import os
+import re
 import secrets
 import sqlite3
 import threading
@@ -22,8 +23,15 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 from werkzeug.utils import secure_filename
 
 from lexprep.length import LENGTH_METHOD, compute_length_chars, length_distribution
-from lexprep.manifest import build_manifest, get_libraries_for_tool, utc_now
-from lexprep.packaging import _df_to_bytes, build_zip
+from lexprep.manifest import (
+    TOOL_REGISTRY,
+    build_manifest,
+    get_libraries_for_tool,
+    registry_key,
+    sanitize_basename,
+    utc_now,
+)
+from lexprep.packaging import _df_to_bytes, build_zip, make_zip_filename
 
 logger = logging.getLogger(__name__)
 
@@ -82,6 +90,11 @@ VALID_TOOLS = {
     'pos_unidic', 'pos_stanza', 'length',
 }
 ALLOWED_EXTENSIONS = {'csv', 'tsv', 'txt', 'xlsx', 'xls'}
+
+# Sanitise user-supplied column names before storing them in manifests
+# or using them in filenames. Only keep word characters, spaces,
+# dots and hyphens; replace everything else with "_".
+_COL_NAME_UNSAFE = re.compile(r'[^\w\s.\-]')
 
 # Privacy: salted IP hashing (generate once per server lifetime)
 _IP_SALT = os.environ.get('LEXPREP_IP_SALT', secrets.token_hex(16))
@@ -407,6 +420,23 @@ def _safe_ext(raw: str) -> str:
     return ''
 
 
+def _manifest_tool_name(language, tool):
+    """Return the manifest-friendly tool name from the registry.
+
+    This helper keeps the zip-filename computation independent of the
+    (potentially tainted) manifest dict.
+    """
+    rkey = registry_key(language, tool) if language else tool
+    spec = TOOL_REGISTRY.get(rkey)
+    return spec.manifest_name if spec else tool
+
+
+def _safe_col_name(raw: str) -> str:
+    """Sanitize a column name by replacing unsafe characters with "_".
+"""
+    return _COL_NAME_UNSAFE.sub('_', raw) if raw else ''
+
+
 
 def _compute_summary(tool, result_df):
     """Compute tool-dependent summary stats for manifest."""
@@ -446,6 +476,10 @@ def _build_zip_response(
     # Language-agnostic tools should not record a language
     manifest_language = None if tool == 'length' else language
 
+    # Pre-compute ZIP filename from trusted values (breaks taint chain)
+    manifest_tool = _manifest_tool_name(manifest_language, tool)
+    zip_fname = make_zip_filename(safe_base, manifest_tool, manifest_language, ts)
+
     added_cols = _get_added_columns(tool, result_df.columns)
     summary = _compute_summary(tool, result_df)
 
@@ -455,7 +489,7 @@ def _build_zip_response(
         original_filename=safe_name,
         file_type=ext,
         row_count=len(df),
-        column_mapping={'word_column': word_column},
+        column_mapping={'word_column': _safe_col_name(word_column)},
         added_columns=added_cols,
         libraries=get_libraries_for_tool(language, tool),
         timestamp=ts,
@@ -466,6 +500,7 @@ def _build_zip_response(
         main_df=output_df,
         input_basename=safe_base,
         output_ext=ext,
+        zip_filename=zip_fname,
     )
     return send_file(
         io.BytesIO(zip_bytes),
@@ -783,6 +818,11 @@ def download_results():
 
         ts = utc_now()
         manifest_language = None if tool == 'length' else (language or None)
+
+        # Pre-compute ZIP filename from trusted values (breaks taint chain)
+        safe_tool = sanitize_basename(tool) if tool else 'unknown'
+        zip_fname = make_zip_filename('lexprep_results', safe_tool, manifest_language, ts)
+
         manifest = build_manifest(
             tool_key=tool,
             language=manifest_language,
@@ -800,6 +840,7 @@ def download_results():
             main_df=df,
             input_basename='lexprep_results',
             output_ext=ext,
+            zip_filename=zip_fname,
         )
         return send_file(
             io.BytesIO(zip_bytes),
@@ -1072,13 +1113,18 @@ def _process_file_background(job_id, file_bytes, ext, language, tool, word_colum
 
         manifest_language = None if tool == 'length' else language
         safe_base = safe_name.rsplit('.', 1)[0] if '.' in safe_name else safe_name
+
+        # Pre-compute ZIP filename 
+        manifest_tool = _manifest_tool_name(manifest_language, tool)
+        zip_fname = make_zip_filename(safe_base, manifest_tool, manifest_language, ts)
+
         manifest = build_manifest(
             tool_key=tool,
             language=manifest_language,
             original_filename=safe_name,
             file_type=out_ext,
             row_count=len(df),
-            column_mapping={'word_column': word_column},
+            column_mapping={'word_column': _safe_col_name(word_column)},
             added_columns=added_cols,
             libraries=get_libraries_for_tool(language, tool),
             timestamp=ts,
@@ -1089,6 +1135,7 @@ def _process_file_background(job_id, file_bytes, ext, language, tool, word_colum
             main_df=output_df,
             input_basename=safe_base,
             output_ext=out_ext,
+            zip_filename=zip_fname,
         )
 
         with _jobs_lock:
@@ -1626,13 +1673,20 @@ def sampling_stratified():
         sampling_section = build_sampling_manifest_section(report)
 
         ts = utc_now()
+
+        # Pre-compute ZIP filename from trusted
+        
+        zip_fname = make_zip_filename(
+            safe_base, 'stratified_sampling', None, ts,
+        )
+
         manifest = build_manifest(
             tool_key='stratified',
             language=None,
             original_filename=safe_name,
             file_type=ext if ext in ('csv', 'tsv') else 'xlsx',
             row_count=len(df),
-            column_mapping={'score_column': score_col},
+            column_mapping={'score_column': _safe_col_name(score_col)},
             added_columns=['bin_id'],
             libraries=[],
             timestamp=ts,
@@ -1651,6 +1705,7 @@ def sampling_stratified():
             is_sampling=True,
             excluded_df=result.excluded_df,
             audit_bytes=audit_bytes_data,
+            zip_filename=zip_fname,
         )
 
         response = send_file(
@@ -1725,6 +1780,10 @@ def sampling_shuffle():
             extra_files.append((out_filename, _df_to_bytes(out_df, out_ext)))
 
         ts = utc_now()
+
+        # Pre-compute ZIP filename from trusted values (breaks taint chain)
+        zip_fname = make_zip_filename('shuffle', 'row_shuffle', None, ts)
+
         manifest = build_manifest(
             tool_key='shuffle',
             language=None,
@@ -1750,6 +1809,7 @@ def sampling_shuffle():
             input_basename='shuffle',
             output_ext='xlsx',
             extra_files=extra_files,
+            zip_filename=zip_fname,
         )
 
         return send_file(
