@@ -32,12 +32,14 @@ jobs:
 
             echo "── Installing dependencies ──"
             source .venv/bin/activate
+            python -m pip install --upgrade pip setuptools wheel --quiet
+            python -m pip install "numpy>=1.26,<3" --only-binary=:all: --quiet
             if [ -f requirements.lock ]; then
-              pip install -c requirements.lock -e ".[fa,en,ja]" --quiet
-              pip install -c requirements.lock -r web/requirements.txt --quiet
+              python -m pip install --prefer-binary -c requirements.lock -e ".[fa,en,ja]" --quiet
+              python -m pip install --prefer-binary -c requirements.lock -r web/requirements.txt --quiet
             else
-              pip install -e ".[fa,en,ja]" --quiet
-              pip install -r web/requirements.txt --quiet
+              python -m pip install --prefer-binary -e ".[fa,en,ja]" --quiet
+              python -m pip install --prefer-binary -r web/requirements.txt --quiet
             fi
 
             echo "── Ensuring NLP resources ──"
