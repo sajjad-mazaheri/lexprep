@@ -18,6 +18,9 @@ sys.path.insert(0, WEB_DIR)
 # Prevent auto-warmup during tests
 os.environ.pop("LEXPREP_WARMUP", None)
 
+# Disable rate limiting during tests
+os.environ["LEXPREP_RATE_LIMIT"] = "false"
+
 # Pre-import nltk to avoid circular import issues when PersianG2p loads it
 # concurrently from a warmup thread (known nltk bug on Windows).
 try:
@@ -768,12 +771,21 @@ class TestAsyncProcessing:
         assert data["status"] in ("running", "completed", "error")
 
     def test_nonexistent_job_returns_404(self, client):
-        resp = client.get("/api/job/nonexistent-id")
+        # Valid UUID format
+        resp = client.get("/api/job/00000000-0000-0000-0000-000000000000")
         assert resp.status_code == 404
 
+    def test_invalid_job_id_returns_400(self, client):
+        resp = client.get("/api/job/nonexistent-id")
+        assert resp.status_code == 400
+
     def test_download_nonexistent_job_returns_404(self, client):
-        resp = client.get("/api/job/nonexistent-id/download")
+        resp = client.get("/api/job/00000000-0000-0000-0000-000000000000/download")
         assert resp.status_code == 404
+
+    def test_download_invalid_job_id_returns_400(self, client):
+        resp = client.get("/api/job/nonexistent-id/download")
+        assert resp.status_code == 400
 
 
 # /api/track

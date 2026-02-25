@@ -26,7 +26,7 @@ def make_zip_filename(
     safe_base = sanitize_basename(input_basename)
     safe_tool = sanitize_basename(tool)
     ts_str = format_timestamp_filename(timestamp)
-    lang = language or "all"
+    lang = sanitize_basename(language) if language else "all"
     return f"{safe_base}__{safe_tool}__{lang}__{ts_str}.zip"
 
 
@@ -74,21 +74,31 @@ def build_zip(
     excluded_df: Optional[pd.DataFrame] = None,
     audit_bytes: Optional[bytes] = None,
     extra_files: Optional[List[Tuple[str, bytes]]] = None,
+    zip_filename: Optional[str] = None,
 ) -> Tuple[bytes, str]:
-    """Build a ZIP reproducibility pack.
+    """Build a reproducibility ZIP pack.
 
-    Files are written in a deterministic, fixed order so that identical
-    inputs always produce the same archive structure.
+    Files are written in a deterministic, fixed order.
 
+    Parameters
+    ----------
+    zip_filename:
+        Optional explicit ZIP filename. If provided, it is used as-is
+        and the filename is not derived from manifest fields.
     Returns
     -------
     (zip_bytes, zip_filename)
     """
-    tool = manifest.get("tool", "unknown")
-    language = manifest.get("language")
-    ts = datetime.fromisoformat(manifest["timestamp_utc"])
-
-    zip_name = make_zip_filename(input_basename, tool, language, ts)
+    if zip_filename is not None:
+        zip_name = zip_filename
+    else:
+        tool = manifest.get("tool", "unknown")
+        language = manifest.get("language")
+        try:
+            ts = datetime.fromisoformat(manifest["timestamp_utc"])
+        except (ValueError, TypeError, KeyError):
+            ts = datetime.utcnow()
+        zip_name = make_zip_filename(input_basename, tool, language, ts)
     main_name = make_output_filename(input_basename, output_ext, is_sampling=is_sampling)
     safe_base = sanitize_basename(input_basename)
 

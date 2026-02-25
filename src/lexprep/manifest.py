@@ -198,7 +198,11 @@ def build_manifest(
     ts = timestamp or utc_now()
     rkey = registry_key(language, tool_key) if language else tool_key
     spec = TOOL_REGISTRY.get(rkey)
-    manifest_tool = spec.manifest_name if spec else tool_key
+    # Use the canonical manifest name from the registry.  When the key is
+    # not found, fall back to the literal ``"unknown"`` so that no
+    # user-supplied value can propagate into the manifest dict (and
+    # ultimately into the ZIP bytes / ``send_file`` response).
+    manifest_tool = spec.manifest_name if spec else "unknown"
 
     manifest: Dict[str, Any] = {
         "lexprep_version": __version__,

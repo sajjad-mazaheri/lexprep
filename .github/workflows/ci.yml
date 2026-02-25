@@ -108,7 +108,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
-          key: pip-web-all-${{ hashFiles('pyproject.toml') }}
+          key: pip-web-all-${{ hashFiles('pyproject.toml', 'web/requirements.txt') }}
           restore-keys: pip-web-all-
 
       - name: Cache NLP models
@@ -124,7 +124,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -e ".[dev,en,fa,ja]"
-          pip install flask flask-cors markupsafe
+          pip install -r web/requirements.txt
 
       - name: Download spaCy model (with retry)
         run: |
@@ -139,8 +139,19 @@ jobs:
 
       - name: Download Stanza models
         run: |
-          python -c "import stanza; stanza.download('fa', verbose=False)"
-          python -c "import stanza; stanza.download('ja', verbose=False)"
+          for lang in fa ja; do
+            for i in 1 2 3 4 5; do
+              python -c "import stanza; stanza.download('${lang}', verbose=False)" && break
+              echo "Stanza ${lang} download attempt $i failed; cleaning cache and retrying in ${i}0s..."
+              rm -f ~/stanza_resources/resources.json
+              rm -rf ~/stanza_resources/${lang}
+              sleep $((i*10))
+              if [ "$i" -eq 5 ]; then
+                echo "Stanza ${lang} download failed after 5 attempts"
+                exit 1
+              fi
+            done
+          done
 
       - name: Run web API tests
         run: |
@@ -223,7 +234,17 @@ jobs:
 
       - name: Download Stanza Persian model
         run: |
-          python -c "import stanza; stanza.download('fa', verbose=False)"
+          for i in 1 2 3 4 5; do
+            python -c "import stanza; stanza.download('fa', verbose=False)" && break
+            echo "Stanza fa download attempt $i failed; cleaning cache and retrying in ${i}0s..."
+            rm -f ~/stanza_resources/resources.json
+            rm -rf ~/stanza_resources/fa
+            sleep $((i*10))
+            if [ "$i" -eq 5 ]; then
+              echo "Stanza fa download failed after 5 attempts"
+              exit 1
+            fi
+          done
 
       - name: Run Persian tests
         run: |
@@ -261,7 +282,17 @@ jobs:
 
       - name: Download Stanza Japanese model
         run: |
-          python -c "import stanza; stanza.download('ja', verbose=False)"
+          for i in 1 2 3 4 5; do
+            python -c "import stanza; stanza.download('ja', verbose=False)" && break
+            echo "Stanza ja download attempt $i failed; cleaning cache and retrying in ${i}0s..."
+            rm -f ~/stanza_resources/resources.json
+            rm -rf ~/stanza_resources/ja
+            sleep $((i*10))
+            if [ "$i" -eq 5 ]; then
+              echo "Stanza ja download failed after 5 attempts"
+              exit 1
+            fi
+          done
 
       - name: Run Japanese tests
         run: |
@@ -312,8 +343,19 @@ jobs:
 
       - name: Download Stanza models
         run: |
-          python -c "import stanza; stanza.download('fa', verbose=False)"
-          python -c "import stanza; stanza.download('ja', verbose=False)"
+          for lang in fa ja; do
+            for i in 1 2 3 4 5; do
+              python -c "import stanza; stanza.download('${lang}', verbose=False)" && break
+              echo "Stanza ${lang} download attempt $i failed; cleaning cache and retrying in ${i}0s..."
+              rm -f ~/stanza_resources/resources.json
+              rm -rf ~/stanza_resources/${lang}
+              sleep $((i*10))
+              if [ "$i" -eq 5 ]; then
+                echo "Stanza ${lang} download failed after 5 attempts"
+                exit 1
+              fi
+            done
+          done
 
       - name: Run CLI tests
         run: |
@@ -335,7 +377,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
-          key: pip-coverage-${{ hashFiles('pyproject.toml') }}
+          key: pip-coverage-${{ hashFiles('pyproject.toml', 'web/requirements.txt') }}
           restore-keys: pip-coverage-
 
       - name: Cache NLP models
@@ -351,7 +393,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -e ".[dev,en,fa,ja]"
-          pip install flask flask-cors markupsafe
+          pip install -r web/requirements.txt
 
       - name: Download spaCy model (with retry)
         run: |
@@ -366,8 +408,19 @@ jobs:
 
       - name: Download Stanza models
         run: |
-          python -c "import stanza; stanza.download('fa', verbose=False)"
-          python -c "import stanza; stanza.download('ja', verbose=False)"
+          for lang in fa ja; do
+            for i in 1 2 3 4 5; do
+              python -c "import stanza; stanza.download('${lang}', verbose=False)" && break
+              echo "Stanza ${lang} download attempt $i failed; cleaning cache and retrying in ${i}0s..."
+              rm -f ~/stanza_resources/resources.json
+              rm -rf ~/stanza_resources/${lang}
+              sleep $((i*10))
+              if [ "$i" -eq 5 ]; then
+                echo "Stanza ${lang} download failed after 5 attempts"
+                exit 1
+              fi
+            done
+          done
 
       - name: Run ALL tests with coverage
         run: |
