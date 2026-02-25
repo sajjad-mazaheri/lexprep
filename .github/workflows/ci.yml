@@ -61,6 +61,7 @@ jobs:
   # Core tests (no NLP deps)
   test-core:
     name: Core Tests (${{ matrix.os }} / py${{ matrix.python-version }})
+    if: "!contains(github.event.head_commit.message, '[skip tests]')"
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -96,6 +97,7 @@ jobs:
   #  Web API tests (with all NLP deps for full coverage) 
   test-web:
     name: Web API Tests (All Tools)
+    if: "!contains(github.event.head_commit.message, '[skip tests]')"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -160,6 +162,7 @@ jobs:
   #  NLP integration tests (English) 
   test-nlp-en:
     name: English NLP Tests
+    if: "!contains(github.event.head_commit.message, '[skip tests]')"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -205,6 +208,7 @@ jobs:
   #  NLP integration tests (Persian) 
   test-nlp-fa:
     name: Persian NLP Tests
+    if: "!contains(github.event.head_commit.message, '[skip tests]')"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -253,6 +257,7 @@ jobs:
   #  NLP integration tests (Japanese) 
   test-nlp-ja:
     name: Japanese NLP Tests
+    if: "!contains(github.event.head_commit.message, '[skip tests]')"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -301,6 +306,7 @@ jobs:
   #  CLI integration tests (all languages) 
   test-cli:
     name: CLI Tests (All Tools)
+    if: "!contains(github.event.head_commit.message, '[skip tests]')"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -364,6 +370,7 @@ jobs:
   #  Full coverage report
   coverage:
     name: Coverage Report
+    if: "!contains(github.event.head_commit.message, '[skip tests]')"
     runs-on: ubuntu-latest
     needs: [test-core, test-web, test-nlp-en, test-nlp-fa, test-nlp-ja, test-cli]
     steps:
