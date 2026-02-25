@@ -14,7 +14,7 @@ from datetime import datetime
 from functools import wraps
 
 import pandas as pd
-from flask import Flask, jsonify, render_template, request, send_file
+from flask import Flask, Response, jsonify, render_template, request
 from flask_cors import CORS
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
@@ -90,6 +90,10 @@ VALID_TOOLS = {
     'pos_unidic', 'pos_stanza', 'length',
 }
 ALLOWED_EXTENSIONS = {'csv', 'tsv', 'txt', 'xlsx', 'xls'}
+
+_LANG_LOOKUP: dict[str, str] = {lang: lang for lang in VALID_LANGUAGES}
+_TOOL_LOOKUP: dict[str, str] = {t: t for t in VALID_TOOLS}
+_FMT_LOOKUP: dict[str, str] = {'csv': 'csv', 'tsv': 'tsv', 'xlsx': 'xlsx'}
 
 # Sanitise user-supplied column names before storing them in manifests
 # or using them in filenames. Only keep word characters, spaces,
@@ -437,6 +441,17 @@ def _safe_col_name(raw: str) -> str:
     return _COL_NAME_UNSAFE.sub('_', raw) if raw else ''
 
 
+def _download_bytes_response(data: bytes, *, mimetype: str, download_name: str) -> Response:
+    """Return an attachment response for in-memory bytes.
+
+    avoid ``flask.send_file`` for in-memory payloads -
+    path-injection analysis does not treat the body bytes as a path argument.
+    """
+    response = Response(data, mimetype=mimetype)
+    response.headers.set('Content-Disposition', 'attachment', filename=download_name)
+    return response
+
+
 
 def _compute_summary(tool, result_df):
     """Compute tool-dependent summary stats for manifest."""
@@ -502,10 +517,9 @@ def _build_zip_response(
         output_ext=ext,
         zip_filename=zip_fname,
     )
-    return send_file(
-        io.BytesIO(zip_bytes),
+    return _download_bytes_response(
+        zip_bytes,
         mimetype='application/zip',
-        as_attachment=True,
         download_name=zip_name,
     )
 
@@ -802,16 +816,18 @@ def download_results():
     try:
         data = request.json
         results = data.get('results', [])
-        format_type = data.get('format', 'csv')
-        language = data.get('language', '')
-        tool = data.get('tool', '')
 
         if not results:
             return jsonify({'error': 'No results to download'}), 400
 
+        # ---- Sanitise user-supplied values via dict-lookup barrier ----
+       
+        tool = _TOOL_LOOKUP.get(data.get('tool', ''), '')
+        language = _LANG_LOOKUP.get(data.get('language', ''), '')
+        ext = _FMT_LOOKUP.get(data.get('format', ''), 'xlsx')
+
         df = pd.DataFrame(results)
         result_df = df.copy()
-        ext = format_type if format_type in ('csv', 'tsv') else 'xlsx'
 
         added_cols = _get_added_columns(tool, result_df.columns)
         summary = _compute_summary(tool, result_df)
@@ -819,12 +835,12 @@ def download_results():
         ts = utc_now()
         manifest_language = None if tool == 'length' else (language or None)
 
-        # Pre-compute ZIP filename from trusted values (breaks taint chain)
-        safe_tool = sanitize_basename(tool) if tool else 'unknown'
-        zip_fname = make_zip_filename('lexprep_results', safe_tool, manifest_language, ts)
+        # Pre-compute ZIP filename from trusted literal values only
+        manifest_tool = _manifest_tool_name(manifest_language, tool or 'unknown')
+        zip_fname = make_zip_filename('lexprep_results', manifest_tool, manifest_language, ts)
 
         manifest = build_manifest(
-            tool_key=tool,
+            tool_key=tool or 'unknown',
             language=manifest_language,
             original_filename='inline_input.txt',
             file_type='txt',
@@ -842,10 +858,9 @@ def download_results():
             output_ext=ext,
             zip_filename=zip_fname,
         )
-        return send_file(
-            io.BytesIO(zip_bytes),
+        return _download_bytes_response(
+            zip_bytes,
             mimetype='application/zip',
-            as_attachment=True,
             download_name=zip_name,
         )
 
@@ -1194,12 +1209,9 @@ def download_job_result(job_id):
             return jsonify({'error': 'Job not completed'}), 400
 
         result = job['result']
-        output = io.BytesIO(result['data'])
-
-        response = send_file(
-            output,
+        response = _download_bytes_response(
+            result['data'],
             mimetype=result['mimetype'],
-            as_attachment=True,
             download_name=result['filename']
         )
         response.headers['X-Word-Count'] = str(result.get('word_count', 0))
@@ -1708,10 +1720,9 @@ def sampling_stratified():
             zip_filename=zip_fname,
         )
 
-        response = send_file(
-            io.BytesIO(zip_bytes),
+        response = _download_bytes_response(
+            zip_bytes,
             mimetype='application/zip',
-            as_attachment=True,
             download_name=zip_name,
         )
 
@@ -1812,10 +1823,9 @@ def sampling_shuffle():
             zip_filename=zip_fname,
         )
 
-        return send_file(
-            io.BytesIO(zip_bytes),
+        return _download_bytes_response(
+            zip_bytes,
             mimetype='application/zip',
-            as_attachment=True,
             download_name=zip_name,
         )
 
