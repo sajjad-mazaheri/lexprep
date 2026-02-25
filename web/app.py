@@ -392,29 +392,20 @@ def admin():
 # ============== ZIP/Manifest Helpers ==============
 
 
-def _safe_filename(raw: str) -> str:
-    """Sanitize an upload filename and validate its extension.
+def _safe_ext(raw: str) -> str:
+    """Extract a validated extension from a raw upload filename.
 
-    Uses ``secure_filename`` *and* rebuilds the name from validated
-    components so CodeQL sees a constant-comparison barrier on every
-    character that reaches downstream sinks.
+    Returns one of ALLOWED_EXTENSIONS or ``''`` when the extension is
+    not recognised.  The result is always a hardcoded constant, which
+    CodeQL recognises as a ConstCompare sanitizer barrier cutting
+    tainted data-flow.
     """
-    name = secure_filename(raw) or 'upload'
-    if '.' in name:
-        base, dot_ext = name.rsplit('.', 1)
-        ext = dot_ext.lower()
-    else:
-        base, ext = name, ''
-    if ext not in ALLOWED_EXTENSIONS:
-        return 'upload.xlsx'
-    # Rebuild from validated parts — the ext is now a ConstCompare-checked value
-    return f'{base}.{ext}'
+    name = secure_filename(raw) or ''
+    ext = name.rsplit('.', 1)[-1].lower() if '.' in name else ''
+    if ext in ALLOWED_EXTENSIONS:
+        return ext
+    return ''
 
-
-def _get_output_ext(filename):
-    """Determine output file extension from input filename."""
-    ext = filename.rsplit('.', 1)[-1].lower() if '.' in filename else ''
-    return ext if ext in ('csv', 'tsv') else 'xlsx'
 
 
 def _compute_summary(tool, result_df):
@@ -442,14 +433,15 @@ def _get_added_columns(tool, result_columns):
 
 
 def _build_zip_response(
-    tool, language, filename, word_column, df, output_df, result_df,
-    ext=None, timestamp=None,
+    tool, language, word_column, df, output_df, result_df,
+    ext=None, timestamp=None, original_filename='upload',
 ):
     """Build a ZIP response for language tool endpoints."""
     ts = timestamp or utc_now()
-    filename = _safe_filename(filename)
-    ext = ext or _get_output_ext(filename)
-    input_basename = secure_filename(filename.rsplit('.', 1)[0]) or 'output'
+    if not ext:
+        ext = 'xlsx'
+    safe_name = secure_filename(original_filename) or 'upload'
+    safe_base = safe_name.rsplit('.', 1)[0] if '.' in safe_name else safe_name
 
     # Language-agnostic tools should not record a language
     manifest_language = None if tool == 'length' else language
@@ -460,8 +452,8 @@ def _build_zip_response(
     manifest = build_manifest(
         tool_key=tool,
         language=manifest_language,
-        original_filename=filename,
-        file_type=filename.rsplit('.', 1)[-1] if '.' in filename else 'xlsx',
+        original_filename=safe_name,
+        file_type=ext,
         row_count=len(df),
         column_mapping={'word_column': word_column},
         added_columns=added_cols,
@@ -472,7 +464,7 @@ def _build_zip_response(
     zip_bytes, zip_name = build_zip(
         manifest=manifest,
         main_df=output_df,
-        input_basename=input_basename,
+        input_basename=safe_base,
         output_ext=ext,
     )
     return send_file(
@@ -828,16 +820,16 @@ def parse_columns():
             return jsonify({'error': 'No file provided'}), 400
 
         file = request.files['file']
-        filename = _safe_filename(file.filename).lower()
+        ext = _safe_ext(file.filename)
 
         # Read file into memory
         file_bytes = io.BytesIO(file.read())
 
-        if filename.endswith('.csv'):
+        if ext == 'csv':
             df = pd.read_csv(file_bytes, nrows=5, encoding='utf-8-sig')
-        elif filename.endswith('.tsv'):
+        elif ext == 'tsv':
             df = pd.read_csv(file_bytes, sep='\t', nrows=5, encoding='utf-8-sig')
-        elif filename.endswith(('.xlsx', '.xls')):
+        elif ext in ('xlsx', 'xls'):
             df = pd.read_excel(file_bytes, nrows=5)
         else:
             return jsonify({'columns': ['word'], 'suggested': 'word'})
@@ -880,22 +872,22 @@ def process_file():
         if tool not in VALID_TOOLS:
             return jsonify({'error': 'Invalid tool'}), 400
 
-        filename = _safe_filename(file.filename).lower()
+        ext = _safe_ext(file.filename)
 
         read_start = time.time()
         file_bytes = io.BytesIO(file.read())
 
         # Read file
-        if filename.endswith('.txt'):
+        if ext == 'txt':
             content = file_bytes.read().decode('utf-8')
             words = [w.strip() for w in content.split('\n') if w.strip()]
             df = pd.DataFrame({'word': words})
             word_column = 'word'
-        elif filename.endswith('.csv'):
+        elif ext == 'csv':
             df = pd.read_csv(file_bytes, encoding='utf-8-sig')
-        elif filename.endswith('.tsv'):
+        elif ext == 'tsv':
             df = pd.read_csv(file_bytes, sep='\t', encoding='utf-8-sig')
-        elif filename.endswith(('.xlsx', '.xls')):
+        elif ext in ('xlsx', 'xls'):
             df = pd.read_excel(file_bytes)
         else:
             return jsonify({'error': 'Unsupported file format'}), 400
@@ -935,14 +927,15 @@ def process_file():
                 output_df[col] = result_df[col].values[:len(output_df)]
 
         # Build ZIP response
-        ext = _get_output_ext(filename)
+        out_ext = ext if ext in ('csv', 'tsv') else 'xlsx'
         total_time = time.time() - start_time
         logger.debug("Complete in %.2fs", total_time)
 
         response = _build_zip_response(
-            tool=tool, language=language, filename=filename,
+            tool=tool, language=language,
             word_column=word_column, df=df, output_df=output_df,
-            result_df=result_df, ext=ext,
+            result_df=result_df, ext=out_ext,
+            original_filename=file.filename,
         )
         response.headers['X-Word-Count'] = str(len(words))
         response.headers['Access-Control-Expose-Headers'] = 'X-Word-Count, Content-Disposition'
@@ -978,7 +971,8 @@ def process_file_async():
 
         # Read file into memory
         file_bytes = file.read()
-        filename = _safe_filename(file.filename).lower()
+        ext = _safe_ext(file.filename)
+        safe_name = secure_filename(file.filename) or 'upload'
 
         # Create job
         job_id = str(uuid.uuid4())
@@ -995,7 +989,7 @@ def process_file_async():
         # Start background processing
         thread = threading.Thread(
             target=_process_file_background,
-            args=(job_id, file_bytes, filename, language, tool, word_column),
+            args=(job_id, file_bytes, ext, language, tool, word_column, safe_name),
             daemon=True
         )
         thread.start()
@@ -1011,7 +1005,8 @@ def process_file_async():
         return jsonify({'error': 'An error occurred while starting the job'}), 500
 
 
-def _process_file_background(job_id, file_bytes, filename, language, tool, word_column):
+def _process_file_background(job_id, file_bytes, ext, language, tool, word_column,
+                             safe_name='upload'):
     """Background processing function"""
     try:
         with _jobs_lock:
@@ -1022,16 +1017,16 @@ def _process_file_background(job_id, file_bytes, filename, language, tool, word_
         file_io = io.BytesIO(file_bytes)
 
         # Read file
-        if filename.endswith('.txt'):
+        if ext == 'txt':
             content = file_io.read().decode('utf-8')
             words = [w.strip() for w in content.split('\n') if w.strip()]
             df = pd.DataFrame({'word': words})
             word_column = 'word'
-        elif filename.endswith('.csv'):
+        elif ext == 'csv':
             df = pd.read_csv(file_io, encoding='utf-8-sig')
-        elif filename.endswith('.tsv'):
+        elif ext == 'tsv':
             df = pd.read_csv(file_io, sep='\t', encoding='utf-8-sig')
-        elif filename.endswith(('.xlsx', '.xls')):
+        elif ext in ('xlsx', 'xls'):
             df = pd.read_excel(file_io)
         else:
             raise ValueError('Unsupported file format')
@@ -1070,18 +1065,18 @@ def _process_file_background(job_id, file_bytes, filename, language, tool, word_
                 output_df[col] = result_df[col].values[:len(output_df)]
 
         # Build ZIP
-        ext = _get_output_ext(filename)
-        input_basename = secure_filename(filename.rsplit('.', 1)[0]) or 'output'
+        out_ext = ext if ext in ('csv', 'tsv') else 'xlsx'
         added_cols = _get_added_columns(tool, result_df.columns)
         summary = _compute_summary(tool, result_df)
         ts = utc_now()
 
         manifest_language = None if tool == 'length' else language
+        safe_base = safe_name.rsplit('.', 1)[0] if '.' in safe_name else safe_name
         manifest = build_manifest(
             tool_key=tool,
             language=manifest_language,
-            original_filename=filename,
-            file_type=filename.rsplit('.', 1)[-1] if '.' in filename else 'xlsx',
+            original_filename=safe_name,
+            file_type=out_ext,
             row_count=len(df),
             column_mapping={'word_column': word_column},
             added_columns=added_cols,
@@ -1092,8 +1087,8 @@ def _process_file_background(job_id, file_bytes, filename, language, tool, word_
         zip_bytes, zip_name = build_zip(
             manifest=manifest,
             main_df=output_df,
-            input_basename=input_basename,
-            output_ext=ext,
+            input_basename=safe_base,
+            output_ext=out_ext,
         )
 
         with _jobs_lock:
@@ -1440,15 +1435,15 @@ def sampling_parse_file():
         if not file.filename:
             return jsonify({'error': 'No file selected'}), 400
 
-        filename = _safe_filename(file.filename).lower()
+        ext = _safe_ext(file.filename)
         file_bytes = io.BytesIO(file.read())
 
         try:
-            if filename.endswith('.csv'):
+            if ext == 'csv':
                 df = pd.read_csv(file_bytes, encoding='utf-8-sig')
-            elif filename.endswith('.tsv'):
+            elif ext == 'tsv':
                 df = pd.read_csv(file_bytes, sep='\t', encoding='utf-8-sig')
-            elif filename.endswith(('.xlsx', '.xls')):
+            elif ext in ('xlsx', 'xls'):
                 df = pd.read_excel(file_bytes)
             else:
                 return jsonify({'error': 'Unsupported file format. Use CSV, TSV, or Excel files.'}), 400
@@ -1510,7 +1505,7 @@ def sampling_parse_file():
             'columns': columns,
             'suggested_column': suggested,
             'row_count': int(len(df)),
-            'filename': _safe_filename(file.filename)
+            'filename': secure_filename(file.filename) or 'upload'
         })
 
     except Exception:
@@ -1547,15 +1542,16 @@ def sampling_stratified():
             return jsonify({'error': 'Stratification column is required'}), 400
 
         # Read file
-        filename = _safe_filename(file.filename)
+        ext = _safe_ext(file.filename)
+        safe_name = secure_filename(file.filename) or 'upload'
+        safe_base = safe_name.rsplit('.', 1)[0] if '.' in safe_name else safe_name
         file_bytes = io.BytesIO(file.read())
-        filename_lower = filename.lower()
 
-        if filename_lower.endswith('.csv'):
+        if ext == 'csv':
             df = pd.read_csv(file_bytes, encoding='utf-8-sig')
-        elif filename_lower.endswith('.tsv'):
+        elif ext == 'tsv':
             df = pd.read_csv(file_bytes, sep='\t', encoding='utf-8-sig')
-        elif filename_lower.endswith(('.xlsx', '.xls')):
+        elif ext in ('xlsx', 'xls'):
             df = pd.read_excel(file_bytes)
         else:
             return jsonify({'error': 'Unsupported file format'}), 400
@@ -1630,12 +1626,11 @@ def sampling_stratified():
         sampling_section = build_sampling_manifest_section(report)
 
         ts = utc_now()
-        input_basename = secure_filename(filename.rsplit('.', 1)[0]) or 'output'
         manifest = build_manifest(
             tool_key='stratified',
             language=None,
-            original_filename=filename,
-            file_type=filename.rsplit('.', 1)[-1] if '.' in filename else 'xlsx',
+            original_filename=safe_name,
+            file_type=ext if ext in ('csv', 'tsv') else 'xlsx',
             row_count=len(df),
             column_mapping={'score_column': score_col},
             added_columns=['bin_id'],
@@ -1651,7 +1646,7 @@ def sampling_stratified():
         zip_bytes, zip_name = build_zip(
             manifest=manifest,
             main_df=result.sample_df,
-            input_basename=input_basename,
+            input_basename=safe_base,
             output_ext='xlsx',
             is_sampling=True,
             excluded_df=result.excluded_df,
@@ -1693,21 +1688,22 @@ def sampling_shuffle():
 
         # Read all files
         dfs = []
-        filenames = []
+        exts = []
+        safe_names = []
         for file in files:
-            safe_name = _safe_filename(file.filename)
-            filename_lower = safe_name.lower()
-            filenames.append(safe_name)
+            ext = _safe_ext(file.filename)
+            exts.append(ext)
+            safe_names.append(secure_filename(file.filename) or f'file_{len(exts)}')
             file_bytes = io.BytesIO(file.read())
 
-            if filename_lower.endswith('.csv'):
+            if ext == 'csv':
                 df = pd.read_csv(file_bytes, encoding='utf-8-sig')
-            elif filename_lower.endswith('.tsv'):
+            elif ext == 'tsv':
                 df = pd.read_csv(file_bytes, sep='\t', encoding='utf-8-sig')
-            elif filename_lower.endswith(('.xlsx', '.xls')):
+            elif ext in ('xlsx', 'xls'):
                 df = pd.read_excel(file_bytes)
             else:
-                return jsonify({'error': f'Unsupported file format: {safe_name}'}), 400
+                return jsonify({'error': 'Unsupported file format'}), 400
 
             dfs.append(df)
 
@@ -1722,19 +1718,17 @@ def sampling_shuffle():
 
         # Build extra files for ZIP
         extra_files = []
-        for out_df, original_name in zip(out_dfs, filenames):
-            base_name = original_name.rsplit('.', 1)[0] if '.' in original_name else original_name
-            ext = original_name.rsplit('.', 1)[1].lower() if '.' in original_name else 'xlsx'
-            if ext not in ('csv', 'tsv'):
-                ext = 'xlsx'
-            out_filename = f'{base_name}_shuffled.{ext}'
-            extra_files.append((out_filename, _df_to_bytes(out_df, ext)))
+        for out_df, sn, file_ext in zip(out_dfs, safe_names, exts):
+            out_ext = file_ext if file_ext in ('csv', 'tsv') else 'xlsx'
+            base = sn.rsplit('.', 1)[0] if '.' in sn else sn
+            out_filename = f'{base}_shuffled.{out_ext}'
+            extra_files.append((out_filename, _df_to_bytes(out_df, out_ext)))
 
         ts = utc_now()
         manifest = build_manifest(
             tool_key='shuffle',
             language=None,
-            original_filename=', '.join(filenames),
+            original_filename=', '.join(safe_names),
             file_type='multiple',
             row_count=shuffle_report.n_rows,
             column_mapping={'used_columns': shuffle_report.used_columns},
