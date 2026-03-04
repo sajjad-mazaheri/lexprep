@@ -1,45 +1,59 @@
 <p align="center">
-  <h1 align="center">lexprep</h1>
-  <p align="center">
-    <strong>Linguistic Data Preparation Toolkit for Wordlists</strong>
-  </p>
-  <p align="center">
-    G2P - Syllables - POS Tagging - Length - Sampling<br>
-    Persian - English - Japanese
-  </p>
+  <a href="https://lexprep.net">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="web/static/images/logo.png">
+      <img src="web/static/images/logo.png" alt="LexPrep" width="280" style="filter: drop-shadow(0 0 18px rgba(99,102,241,0.45));">
+    </picture>
+  </a>
 </p>
 
 <p align="center">
-  <a href="https://doi.org/10.5281/zenodo.18713755">
-    <img src="https://zenodo.org/badge/DOI/10.5281/zenodo.18713755.svg" alt="DOI">
-  </a>
+  <em>Open research infrastructure for reproducible data preparation.<br>
+  Structure the manual, undocumented steps of research workflows — from linguistic enrichment<br>
+  to balanced sampling and audit trails — into transparent, shareable pipelines.</em>
+</p>
+
+<p align="center">
+  G2P · Syllables · POS Tagging · Length · Sampling<br>
+  Persian · English · Japanese
+</p>
+
+<p align="center">
+  <a href="https://doi.org/10.5281/zenodo.18713755"><img src="https://zenodo.org/badge/DOI/10.5281/zenodo.18713755.svg" alt="DOI"></a>
   <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
   <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.10+-blue.svg" alt="Python 3.10+"></a>
+  <a href="https://lexprep.net"><img src="https://img.shields.io/badge/Web_UI-lexprep.net-6366f1?logo=googlechrome&logoColor=white" alt="Web UI"></a>
+  <a href="https://github.com/sajjad-mazaheri/lexprep"><img src="https://img.shields.io/github/stars/sajjad-mazaheri/lexprep?style=social" alt="GitHub stars"></a>
+</p>
+
+<p align="center">
+  <a href="https://demo.lexprep.net/demo/cmmaipueb83yodtfhvvsjd329">🎯 Live Demo</a> · <a href="https://youtu.be/YvY3CG6uIdQ?si=MjG0Slv5jyauL1Sr">🎬 Video Walkthrough</a> · <a href="https://lexprep.net/overview">📖 Overview</a> · <a href="QUICKSTART.md">🚀 Quick Start</a>
+</p>
+
+---
+
+<p align="center">
+  <img src="web/static/images/workflow.jpg" alt="LexPrep Workflow" width="800">
 </p>
 
 ---
 
 ## What is lexprep?
 
-**lexprep** is a  toolkit designed for **linguistic data preparation**. It processes **wordlists**  and provides:
+**lexprep** is open research infrastructure for **reproducible linguistic data preparation**. It processes **wordlists** and provides:
 
-- **G2P Transcription**: Convert words to phonetic representations
-- **Syllable Counting**: Count syllables using orthographic or phonetic methods
-- **POS Tagging**: Assign part-of-speech tags to words
-- **Length**: Count Unicode codepoints per word (`length_chars`)
-- **Sampling**: Stratified sampling and multi-file shuffling
-- **Reproducibility Pack**: Every command outputs a ZIP with data + `run_manifest.json`
+- **G2P Transcription** — Convert words to phonetic representations
+- **Syllable Counting** — Count syllables using orthographic or phonetic methods
+- **POS Tagging** — Assign part-of-speech tags to words
+- **Length** — Count Unicode codepoints per word (`length_chars`)
+- **Sampling** — Stratified sampling and multi-file shuffling
+- **Reproducibility Pack** — Every command outputs a ZIP with data + `run_manifest.json`
 
 ### Key Difference from Other NLP Tools
 
-Most NLP libraries (spaCy, Stanza, etc.) are designed for **text processing** - analyzing sentences and documents.
-
-**lexprep** is designed for **wordlist processing** - working with isolated words in spreadsheets:
-
-| Tool | Input | Use Case |
-|------|-------|----------|
-| spaCy, Stanza | Running text/sentences | Document analysis, NER, parsing |
-| **lexprep** | Wordlists (CSV/XLSX/TXT) | stimulus preparation |
+<p align="center">
+  <img src="web/static/images/Difference.jpg" alt="LexPrep vs Other NLP Tools" width="700">
+</p>
 
 
 ## Supported Languages & Tools
@@ -159,6 +173,9 @@ Use `-c` or `--column-name` to specify the word column.
 
 lexprep includes a **web-based UI** for processing wordlists through your browser:
 
+<p align="center">
+  <img src="web/static/images/interface.jpg" alt="LexPrep Web Interface" width="750">
+</p>
 
 Features:
 - Upload files (Excel, CSV, TSV, TXT)
