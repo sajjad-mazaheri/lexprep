@@ -398,6 +398,12 @@ def sampling():
         page_subtitle='Statistical sampling methods for experimental stimulus selection')
 
 
+@app.route('/overview')
+def overview():
+    log_page_view('overview')
+    return render_template('overview.html')
+
+
 @app.route('/admin')
 def admin():
     if not ADMIN_ENABLED:

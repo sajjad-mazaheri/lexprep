@@ -169,3 +169,6 @@ web/static/images/*
 !web/static/images/logo.png
 !web/static/images/AUTHOR.png
 !web/static/images/.gitkeep
+!web/static/images/workflow.jpg
+!web/static/images/interface.jpg
+!web/static/images/difference.jpg
