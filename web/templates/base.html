@@ -36,13 +36,12 @@
             <ul class="nav-menu">
                 <li><a href="/" class="nav-link {{ 'active' if active_page == 'home' }}">Tools</a></li>
                 <li><a href="/sampling" class="nav-link {{ 'active' if active_page == 'sampling' }}">Sampling</a></li>
-                <li><a href="/overview" class="nav-link {{ 'active' if active_page == 'overview' }}">Overview</a></li>
                 <li><a href="/about" class="nav-link {{ 'active' if active_page == 'about' }}">About</a></li>
                 <li><a href="/references" class="nav-link {{ 'active' if active_page == 'references' }}">References</a></li>
                 <li><a href="/accuracy" class="nav-link {{ 'active' if active_page == 'accuracy' }}">Accuracy</a></li>
                 <li><a href="/author" class="nav-link {{ 'active' if active_page == 'author' }}">Author</a></li>
                 <li><a href="/contribute" class="nav-link {{ 'active' if active_page == 'contribute' }}">Contribute</a></li>
-                <li><a href="javascript:void(0)" onclick="openDemoModal()" class="nav-link nav-demo-btn">Demo</a></li>
+                <li><a href="/overview" class="nav-link nav-overview-btn {{ 'active' if active_page == 'overview' }}">Overview</a></li>
             </ul>
             <button type="button" class="nav-toggle" id="navToggle" aria-label="Toggle menu">
                 <span></span>
@@ -78,97 +77,21 @@
 
     {% block toast %}{% endblock %}
 
-    <!-- Demo Modal (global, available on all pages) -->
-    <div id="demoModal" class="demo-modal-overlay" style="display:none;" onclick="if(event.target===this)closeDemoModal()">
-        <div class="demo-modal-content">
-            <button class="demo-modal-close" onclick="closeDemoModal()" aria-label="Close demo">&times;</button>
-            <div style="position:relative;box-sizing:content-box;width:100%;aspect-ratio:1.78;padding:0;">
-                <iframe id="demoIframe" src="" loading="lazy" title="LexPrep Interactive Demo" allow="clipboard-write" frameborder="0" webkitallowfullscreen="true" mozallowfullscreen="true" allowfullscreen style="position:absolute;top:0;left:0;width:100%;height:100%;border-radius:12px;"></iframe>
-            </div>
-        </div>
-    </div>
-
     <style>
-        .nav-demo-btn {
-            background: var(--gradient-primary, linear-gradient(135deg, #6366f1, #a855f7)) !important;
-            color: #fff !important;
+        .nav-overview-btn {
+            color: #a5b4fc !important;
+            border: 1px solid rgba(99, 102, 241, 0.45) !important;
             border-radius: 8px !important;
-            padding: 6px 16px !important;
-            font-weight: 600 !important;
-            transition: box-shadow 0.25s ease, transform 0.15s ease !important;
+            box-shadow: 0 0 8px rgba(99,102,241,0.15) !important;
+            transition: border-color 0.25s ease, box-shadow 0.25s ease, color 0.2s ease !important;
         }
-        .nav-demo-btn:hover {
-            box-shadow: 0 0 20px rgba(99,102,241,0.5) !important;
-            transform: scale(1.05) !important;
+        .nav-overview-btn:hover, .nav-overview-btn.active {
+            color: #e0e7ff !important;
+            border-color: rgba(139,92,246,0.75) !important;
+            box-shadow: 0 0 18px rgba(139,92,246,0.35) !important;
+            background: rgba(99,102,241,0.08) !important;
         }
-        .demo-modal-overlay {
-            position: fixed;
-            inset: 0;
-            z-index: 9999;
-            background: rgba(0,0,0,0.85);
-            backdrop-filter: blur(8px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            animation: fadeIn 0.2s ease;
-        }
-        .demo-modal-content {
-            position: relative;
-            width: 90vw;
-            max-width: 1100px;
-            max-height: 85vh;
-            background: #0f172a;
-            border-radius: 16px;
-            border: 1px solid rgba(99,102,241,0.3);
-            box-shadow: 0 0 60px rgba(99,102,241,0.2);
-            padding: 16px;
-            animation: scaleIn 0.25s ease;
-        }
-        .demo-modal-close {
-            position: absolute;
-            top: -12px;
-            right: -12px;
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            border: 1px solid rgba(255,255,255,0.2);
-            background: #1e293b;
-            color: #fff;
-            font-size: 20px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 10;
-            transition: background 0.2s, transform 0.15s;
-        }
-        .demo-modal-close:hover {
-            background: #ef4444;
-            transform: scale(1.1);
-        }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes scaleIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
     </style>
-
-    <script>
-        function openDemoModal() {
-            var modal = document.getElementById('demoModal');
-            var iframe = document.getElementById('demoIframe');
-            iframe.src = 'https://demo.lexprep.net/embed/cmmaipueb83yodtfhvvsjd329?embed_v=2&utm_source=embed';
-            modal.style.display = 'flex';
-            document.body.style.overflow = 'hidden';
-        }
-        function closeDemoModal() {
-            var modal = document.getElementById('demoModal');
-            var iframe = document.getElementById('demoIframe');
-            modal.style.display = 'none';
-            iframe.src = '';
-            document.body.style.overflow = '';
-        }
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') closeDemoModal();
-        });
-    </script>
 
     {% block scripts %}
     <script src="/static/js/app.js"></script>

@@ -1,492 +1,463 @@
-<!DOCTYPE html>
-<html lang="en" class="scroll-smooth">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LexPrep - Reproducible Data Preparation</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                    },
-                    colors: {
-                        slate: {
-                            850: '#151e2e',
-                            950: '#020617',
-                        }
-                    },
-                    animation: {
-                        'float': 'float 6s ease-in-out infinite',
-                        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                    },
-                    keyframes: {
-                        float: {
-                            '0%, 100%': { transform: 'translateY(0)' },
-                            '50%': { transform: 'translateY(-10px)' },
-                        }
+{% extends 'base.html' %}
+
+{% block title %}Overview - lexprep{% endblock %}
+{% block description %}Open research infrastructure for reproducible data preparation workflows in lexprep.{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<script>
+    tailwind.config = {
+        darkMode: 'class',
+        theme: {
+            extend: {
+                fontFamily: {
+                    sans: ['Inter', 'sans-serif'],
+                },
+                colors: {
+                    slate: {
+                        850: '#151e2e',
+                        950: '#020617',
+                    }
+                },
+                animation: {
+                    'float': 'float 6s ease-in-out infinite',
+                    'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                },
+                keyframes: {
+                    float: {
+                        '0%, 100%': { transform: 'translateY(0)' },
+                        '50%': { transform: 'translateY(-10px)' },
                     }
                 }
             }
         }
-    </script>
-    <style>
-        body {
-            background-color: #020617;
-            color: #f8fafc;
-            overflow-x: hidden;
-        }
+    }
+</script>
+<style>
+    body {
+        background-color: #020617;
+        color: #f8fafc;
+        overflow-x: hidden;
+    }
 
-        /* Mouse Tracking Glow Effect */
-        .glow-card {
-            position: relative;
-            background: rgba(15, 23, 42, 0.6);
-            backdrop-filter: blur(10px);
-            z-index: 1;
-            overflow: hidden;
-        }
-        
-        .glow-card::before {
-            content: "";
-            position: absolute;
-            top: var(--mouse-y, 50%);
-            left: var(--mouse-x, 50%);
-            transform: translate(-50%, -50%);
-            width: 400px;
-            height: 400px;
-            background: radial-gradient(circle, var(--glow-color, rgba(255,255,255,0.1)) 0%, transparent 60%);
-            opacity: 0;
-            transition: opacity 0.5s ease;
-            pointer-events: none;
-            z-index: -1;
-        }
+    .glow-card {
+        position: relative;
+        background: rgba(15, 23, 42, 0.6);
+        backdrop-filter: blur(10px);
+        z-index: 1;
+        overflow: hidden;
+    }
 
-        .glow-card:hover::before {
-            opacity: 1;
-        }
+    .glow-card::before {
+        content: "";
+        position: absolute;
+        top: var(--mouse-y, 50%);
+        left: var(--mouse-x, 50%);
+        transform: translate(-50%, -50%);
+        width: 400px;
+        height: 400px;
+        background: radial-gradient(circle, var(--glow-color, rgba(255,255,255,0.1)) 0%, transparent 60%);
+        opacity: 0;
+        transition: opacity 0.5s ease;
+        pointer-events: none;
+        z-index: -1;
+    }
 
-        /* Scroll Reveal Utility */
-        .reveal {
-            opacity: 0;
-            transform: translateY(30px);
-            transition: all 0.8s ease-out;
-        }
-        .reveal.active {
-            opacity: 1;
-            transform: translateY(0);
-        }
+    .glow-card:hover::before {
+        opacity: 1;
+    }
 
-        /* Custom Gradients for Borders */
-        .border-gradient-blue {
-            border-image: linear-gradient(to right, #0ea5e9, #3b82f6) 1;
-        }
-        
-        /* Subtle Grid Background */
-        .bg-grid {
-            background-image: 
-                linear-gradient(to right, rgba(255,255,255,0.05) 1px, transparent 1px),
-                linear-gradient(to bottom, rgba(255,255,255,0.05) 1px, transparent 1px);
-            background-size: 40px 40px;
-        }
-    </style>
-</head>
-<body class="antialiased selection:bg-indigo-500/30 selection:text-indigo-200">
+    .reveal {
+        opacity: 0;
+        transform: translateY(30px);
+        transition: all 0.8s ease-out;
+    }
 
-    <!-- Background Elements -->
-    <div class="fixed inset-0 bg-grid pointer-events-none z-0"></div>
-    <div class="fixed top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-600/20 rounded-full blur-[120px] pointer-events-none z-0"></div>
-    <div class="fixed bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-600/20 rounded-full blur-[120px] pointer-events-none z-0"></div>
+    .reveal.active {
+        opacity: 1;
+        transform: translateY(0);
+    }
 
-    <main class="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        
-        <!-- HEADER / HERO -->
-        <header class="text-center mb-24 reveal">
-            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-800/50 border border-slate-700 text-sm text-indigo-400 mb-6 shadow-[0_0_15px_rgba(99,102,241,0.15)]">
-                <span class="relative flex h-2 w-2">
-                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-                  <span class="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
-                </span>
-                v1.0.0 is live
-            </div>
-            <div class="mb-6 flex justify-center">
-                <img src="web\static\images\logo.png" alt="LexPrep" class="h-20 sm:h-24 drop-shadow-[0_0_25px_rgba(99,102,241,0.5)]" style="filter: drop-shadow(0 0 20px rgba(99,102,241,0.4)) drop-shadow(0 0 60px rgba(139,92,246,0.2));">
-            </div>
-            <p class="text-xl sm:text-2xl text-slate-300 max-w-3xl mx-auto font-light leading-relaxed mb-10">
-                Open research infrastructure for <strong class="text-white font-semibold">reproducible data preparation</strong>.
-            </p>
+    .bg-grid {
+        background-image:
+            linear-gradient(to right, rgba(255,255,255,0.05) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(255,255,255,0.05) 1px, transparent 1px);
+        background-size: 40px 40px;
+    }
+</style>
+{% endblock %}
 
-            <div class="flex flex-wrap justify-center gap-4 mb-6">
-                <button onclick="openDemoModal()" class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-semibold hover:from-indigo-600 hover:to-purple-700 transition-all shadow-[0_0_25px_rgba(99,102,241,0.4)] hover:shadow-[0_0_35px_rgba(99,102,241,0.6)] hover:scale-105">
-                    <i data-lucide="play-circle" class="w-5 h-5"></i> Interactive Demo
-                </button>
-                <a href="https://youtu.be/YvY3CG6uIdQ?si=MjG0Slv5jyauL1Sr" target="_blank" rel="noopener" class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-slate-800 border border-slate-600 text-white font-semibold hover:border-red-500/50 hover:shadow-[0_0_20px_rgba(239,68,68,0.3)] transition-all hover:scale-105">
-                    <i data-lucide="youtube" class="w-5 h-5 text-red-400"></i> Watch Video
-                </a>
-            </div>
-            
-            <div class="flex flex-wrap justify-center gap-4 text-sm font-medium">
-                <a href="https://lexprep.net" target="_blank" rel="noopener" class="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-600 hover:border-indigo-500/50 transition-all hover:shadow-[0_0_20px_rgba(99,102,241,0.3)] group">
-                    <i data-lucide="globe" class="w-4 h-4 text-indigo-400 group-hover:scale-110 transition-transform"></i> lexprep.net
-                </a>
-                <a href="https://github.com/sajjad-mazaheri/lexprep" target="_blank" rel="noopener" class="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-600 hover:border-purple-500/50 transition-all hover:shadow-[0_0_20px_rgba(168,85,247,0.3)] group">
-                    <i data-lucide="github" class="w-4 h-4 text-purple-400 group-hover:scale-110 transition-transform"></i> GitHub
-                </a>
-                <a href="https://doi.org/10.5281/zenodo.18713755" target="_blank" rel="noopener" class="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-slate-800/50 hover:bg-slate-700 border border-slate-700/50 hover:border-emerald-500/50 text-slate-400 hover:text-emerald-300 transition-all group">
-                    <i data-lucide="book-open" class="w-4 h-4"></i> DOI: 10.5281/zenodo.18713755
-                </a>
-            </div>
-            
-            <div class="mt-8 flex justify-center items-center gap-4 text-xs text-slate-500 uppercase tracking-widest">
-                <span><i data-lucide="shield-check" class="w-3 h-3 inline mr-1"></i> MIT License</span>
-                <span>&bull;</span>
-                <span><i data-lucide="code-2" class="w-3 h-3 inline mr-1"></i> Python 3.10+</span>
-            </div>
-        </header>
+{% block page_content %}
+<div class="fixed inset-0 bg-grid pointer-events-none z-0"></div>
+<div class="fixed top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-600/20 rounded-full blur-[120px] pointer-events-none z-0"></div>
+<div class="fixed bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-600/20 rounded-full blur-[120px] pointer-events-none z-0"></div>
 
-        <!-- THE PROBLEM -->
-        <section class="mb-24 reveal">
-            <div class="relative group rounded-3xl p-1 bg-gradient-to-b from-red-500/20 to-transparent hover:from-red-500/40 transition-all duration-500">
-                <div class="absolute inset-0 bg-red-500/10 blur-xl rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
-                <div class="bg-slate-900 rounded-[23px] p-8 sm:p-10 relative overflow-hidden h-full border border-slate-800">
-                    <div class="absolute top-0 right-0 p-8 opacity-10">
-                        <i data-lucide="alert-triangle" class="w-32 h-32 text-red-500"></i>
-                    </div>
-                    <h2 class="text-2xl sm:text-3xl font-bold text-white mb-4 flex items-center gap-3">
-                        <i data-lucide="file-warning" class="w-8 h-8 text-red-400"></i> The Problem
-                    </h2>
-                    <p class="text-slate-300 text-lg leading-relaxed max-w-4xl">
-                        Across experimental research, data preparation is one of the most time-consuming stages, yet it remains <span class="text-red-300 bg-red-500/10 px-1 rounded">largely undocumented</span>. Stimulus lists and datasets are built manually in spreadsheets, with no version control, no audit trails, and no standardized way to reproduce or share the process. Published studies rarely document how items were filtered, balanced, or allocated. This reproducibility gap undermines confidence in results and makes replication unnecessarily difficult.
-                    </p>
+<main class="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-20">
+    <header class="text-center mb-24 reveal">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-800/50 border border-slate-700 text-sm text-indigo-400 mb-6 shadow-[0_0_15px_rgba(99,102,241,0.15)]">
+            <span class="relative flex h-2 w-2">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
+            </span>
+            v1.0.0 is live
+        </div>
+        <div class="mb-6 flex justify-center">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="LexPrep" class="h-20 sm:h-24 drop-shadow-[0_0_25px_rgba(99,102,241,0.5)]" style="filter: drop-shadow(0 0 20px rgba(99,102,241,0.4)) drop-shadow(0 0 60px rgba(139,92,246,0.2));">
+        </div>
+        <p class="text-xl sm:text-2xl text-slate-300 max-w-3xl mx-auto font-light leading-relaxed mb-10">
+            Open research infrastructure for <strong class="text-white font-semibold">reproducible data preparation</strong>.
+        </p>
+
+        <div class="flex flex-wrap justify-center gap-4 mb-6">
+            <button onclick="openDemoModal()" class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-semibold hover:from-indigo-600 hover:to-purple-700 transition-all shadow-[0_0_25px_rgba(99,102,241,0.4)] hover:shadow-[0_0_35px_rgba(99,102,241,0.6)] hover:scale-105">
+                <i data-lucide="play-circle" class="w-5 h-5"></i> Interactive Demo
+            </button>
+            <a href="https://youtu.be/YvY3CG6uIdQ?si=MjG0Slv5jyauL1Sr" target="_blank" rel="noopener" class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-slate-800 border border-slate-600 text-white font-semibold hover:border-red-500/50 hover:shadow-[0_0_20px_rgba(239,68,68,0.3)] transition-all hover:scale-105">
+                <i data-lucide="youtube" class="w-5 h-5 text-red-400"></i> Watch Video
+            </a>
+        </div>
+
+        <div class="flex flex-wrap justify-center gap-4 text-sm font-medium">
+            <a href="https://lexprep.net" target="_blank" rel="noopener" class="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-600 hover:border-indigo-500/50 transition-all hover:shadow-[0_0_20px_rgba(99,102,241,0.3)] group">
+                <i data-lucide="globe" class="w-4 h-4 text-indigo-400 group-hover:scale-110 transition-transform"></i> lexprep.net
+            </a>
+            <a href="https://github.com/sajjad-mazaheri/lexprep" target="_blank" rel="noopener" class="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-600 hover:border-purple-500/50 transition-all hover:shadow-[0_0_20px_rgba(168,85,247,0.3)] group">
+                <i data-lucide="github" class="w-4 h-4 text-purple-400 group-hover:scale-110 transition-transform"></i> GitHub
+            </a>
+            <a href="https://doi.org/10.5281/zenodo.18713755" target="_blank" rel="noopener" class="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-slate-800/50 hover:bg-slate-700 border border-slate-700/50 hover:border-emerald-500/50 text-slate-400 hover:text-emerald-300 transition-all group">
+                <i data-lucide="book-open" class="w-4 h-4"></i> DOI: 10.5281/zenodo.18713755
+            </a>
+        </div>
+
+        <div class="mt-8 flex justify-center items-center gap-4 text-xs text-slate-500 uppercase tracking-widest">
+            <span><i data-lucide="shield-check" class="w-3 h-3 inline mr-1"></i> MIT License</span>
+            <span>&bull;</span>
+            <span><i data-lucide="code-2" class="w-3 h-3 inline mr-1"></i> Python 3.10+</span>
+        </div>
+    </header>
+
+    <section class="mb-24 reveal">
+        <div class="relative group rounded-3xl p-1 bg-gradient-to-b from-red-500/20 to-transparent hover:from-red-500/40 transition-all duration-500">
+            <div class="absolute inset-0 bg-red-500/10 blur-xl rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+            <div class="bg-slate-900 rounded-[23px] p-8 sm:p-10 relative overflow-hidden h-full border border-slate-800">
+                <div class="absolute top-0 right-0 p-8 opacity-10">
+                    <i data-lucide="alert-triangle" class="w-32 h-32 text-red-500"></i>
                 </div>
-            </div>
-            
-            <div class="flex justify-center mt-8 text-slate-500">
-                <i data-lucide="arrow-down-circle" class="w-8 h-8 animate-bounce"></i>
-            </div>
-        </section>
-
-        <!-- THE WORKFLOW -->
-        <section class="mb-24">
-            <h2 class="text-3xl sm:text-4xl font-bold text-center mb-12 text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.2)] reveal">
-                The LexPrep Workflow
-            </h2>
-            
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <!-- Step 1 -->
-                <div class="glow-card rounded-2xl p-6 border border-slate-700/50 hover:border-indigo-500/50 transition-colors reveal" style="--glow-color: rgba(99, 102, 241, 0.15);">
-                    <div class="w-14 h-14 rounded-xl bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center mb-6 shadow-[0_0_15px_rgba(99,102,241,0.2)]">
-                        <span class="text-2xl font-bold text-indigo-400">1</span>
-                    </div>
-                    <h3 class="text-xl font-bold text-white mb-2 flex items-center gap-2">
-                        <i data-lucide="sparkles" class="w-5 h-5 text-indigo-400"></i> Enrich
-                    </h3>
-                    <p class="text-indigo-300/80 text-sm font-medium mb-4">Automated Linguistic Enrichment</p>
-                    <ul class="space-y-3 text-slate-300 text-sm">
-                        <li class="flex items-start gap-2"><i data-lucide="check" class="w-4 h-4 text-indigo-500 mt-0.5 shrink-0"></i> G2P phonetic transcription</li>
-                        <li class="flex items-start gap-2"><i data-lucide="check" class="w-4 h-4 text-indigo-500 mt-0.5 shrink-0"></i> Syllable counting</li>
-                        <li class="flex items-start gap-2"><i data-lucide="check" class="w-4 h-4 text-indigo-500 mt-0.5 shrink-0"></i> POS tagging (UPOS + fine-grained)</li>
-                        <li class="flex items-start gap-2"><i data-lucide="check" class="w-4 h-4 text-indigo-500 mt-0.5 shrink-0"></i> Word length (Unicode codepoints)</li>
-                    </ul>
-                    <div class="mt-5 pt-5 border-t border-slate-700/50 text-xs text-slate-400">
-                        Supports Persian, English, Japanese
-                    </div>
-                </div>
-
-                <!-- Step 2 -->
-                <div class="glow-card rounded-2xl p-6 border border-slate-700/50 hover:border-purple-500/50 transition-colors reveal delay-100" style="--glow-color: rgba(168, 85, 247, 0.15);">
-                    <div class="w-14 h-14 rounded-xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center mb-6 shadow-[0_0_15px_rgba(168,85,247,0.2)]">
-                        <span class="text-2xl font-bold text-purple-400">2</span>
-                    </div>
-                    <h3 class="text-xl font-bold text-white mb-2 flex items-center gap-2">
-                        <i data-lucide="layers" class="w-5 h-5 text-purple-400"></i> Sample
-                    </h3>
-                    <p class="text-purple-300/80 text-sm font-medium mb-4">Bias-Aware Stratified Sampling</p>
-                    <ul class="space-y-3 text-slate-300 text-sm">
-                        <li class="flex items-start gap-2"><i data-lucide="check" class="w-4 h-4 text-purple-500 mt-0.5 shrink-0"></i> Quantile-based stratification</li>
-                        <li class="flex items-start gap-2"><i data-lucide="check" class="w-4 h-4 text-purple-500 mt-0.5 shrink-0"></i> Equal, proportional, optimal (Neyman) and fixed allocation methods</li>
-                        <li class="flex items-start gap-2"><i data-lucide="check" class="w-4 h-4 text-purple-500 mt-0.5 shrink-0"></i> Seeded randomization for exact reproduction across runs</li>
-                    </ul>
-                </div>
-
-                <!-- Step 3 -->
-                <div class="glow-card rounded-2xl p-6 border border-slate-700/50 hover:border-emerald-500/50 transition-colors reveal delay-200" style="--glow-color: rgba(16, 185, 129, 0.15);">
-                    <div class="w-14 h-14 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center mb-6 shadow-[0_0_15px_rgba(16,185,129,0.2)]">
-                        <span class="text-2xl font-bold text-emerald-400">3</span>
-                    </div>
-                    <h3 class="text-xl font-bold text-white mb-2 flex items-center gap-2">
-                        <i data-lucide="clipboard-check" class="w-5 h-5 text-emerald-400"></i> Audit
-                    </h3>
-                    <p class="text-emerald-300/80 text-sm font-medium mb-4">Machine-Readable Audit Trails</p>
-                    <ul class="space-y-3 text-slate-300 text-sm">
-                        <li class="flex items-start gap-2"><i data-lucide="check" class="w-4 h-4 text-emerald-500 mt-0.5 shrink-0"></i> ZIP reproducibility pack per run</li>
-                        <li class="flex items-start gap-2"><i data-lucide="check" class="w-4 h-4 text-emerald-500 mt-0.5 shrink-0"></i> JSON manifest: tool, version, seed, timestamp, library versions</li>
-                        <li class="flex items-start gap-2"><i data-lucide="check" class="w-4 h-4 text-emerald-500 mt-0.5 shrink-0"></i> Per-bin statistics and excluded items</li>
-                        <li class="flex items-start gap-2"><i data-lucide="check" class="w-4 h-4 text-emerald-500 mt-0.5 shrink-0"></i> Full documentation of every decision</li>
-                    </ul>
-                </div>
-            </div>
-        </section>
-
-        <!-- TABLE & USE CASE GRID -->
-        <section class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-24 reveal">
-            
-            <!-- Table -->
-            <div class="glow-card rounded-2xl p-6 border border-slate-700 hover:shadow-[0_0_30px_rgba(59,130,246,0.1)] transition-shadow" style="--glow-color: rgba(59, 130, 246, 0.1);">
-                <h3 class="text-xl font-bold text-white mb-6 flex items-center gap-2">
-                    <i data-lucide="languages" class="w-5 h-5 text-blue-400"></i> Supported Languages & Tools
-                </h3>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left text-sm whitespace-nowrap">
-                        <thead>
-                            <tr class="border-b border-slate-700 text-slate-400">
-                                <th class="pb-3 font-medium">Language</th>
-                                <th class="pb-3 font-medium">G2P</th>
-                                <th class="pb-3 font-medium">Syllables</th>
-                                <th class="pb-3 font-medium">POS</th>
-                                <th class="pb-3 font-medium text-center">Length</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-800">
-                            <tr class="hover:bg-slate-800/50 transition-colors group">
-                                <td class="py-3 font-medium text-white flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-emerald-500 group-hover:shadow-[0_0_8px_#10b981]"></span> Persian</td>
-                                <td class="py-3 text-slate-300">PersianG2p</td>
-                                <td class="py-3 text-slate-300">Heuristic</td>
-                                <td class="py-3 text-slate-300">Stanza</td>
-                                <td class="py-3 text-center text-emerald-400"><i data-lucide="check" class="w-4 h-4 mx-auto"></i></td>
-                            </tr>
-                            <tr class="hover:bg-slate-800/50 transition-colors group">
-                                <td class="py-3 font-medium text-white flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-blue-500 group-hover:shadow-[0_0_8px_#3b82f6]"></span> English</td>
-                                <td class="py-3 text-slate-300">g2p-en (CMU)</td>
-                                <td class="py-3 text-slate-300">pyphen (TeX)</td>
-                                <td class="py-3 text-slate-300">spaCy</td>
-                                <td class="py-3 text-center text-emerald-400"><i data-lucide="check" class="w-4 h-4 mx-auto"></i></td>
-                            </tr>
-                            <tr class="hover:bg-slate-800/50 transition-colors group">
-                                <td class="py-3 font-medium text-white flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-red-500 group-hover:shadow-[0_0_8px_#ef4444]"></span> Japanese</td>
-                                <td class="py-3 text-slate-500">-</td>
-                                <td class="py-3 text-slate-500">-</td>
-                                <td class="py-3 text-slate-300">Stanza/UniDic</td>
-                                <td class="py-3 text-center text-emerald-400"><i data-lucide="check" class="w-4 h-4 mx-auto"></i></td>
-                            </tr>
-                            <tr class="hover:bg-slate-800/50 transition-colors group">
-                                <td class="py-3 font-medium text-white flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-slate-500 group-hover:shadow-[0_0_8px_#64748b]"></span> Any</td>
-                                <td class="py-3 text-slate-500">-</td>
-                                <td class="py-3 text-slate-500">-</td>
-                                <td class="py-3 text-slate-500">-</td>
-                                <td class="py-3 text-center text-emerald-400"><i data-lucide="check" class="w-4 h-4 mx-auto"></i></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Example Use Case -->
-            <div class="glow-card rounded-2xl p-6 border border-slate-700 hover:shadow-[0_0_30px_rgba(245,158,11,0.1)] transition-shadow" style="--glow-color: rgba(245, 158, 11, 0.1);">
-                <h3 class="text-xl font-bold text-white mb-2 flex items-center gap-2">
-                    <i data-lucide="play-circle" class="w-5 h-5 text-amber-400"></i> Example Use Case
-                </h3>
-                <p class="text-sm text-slate-400 mb-6">A researcher preparing 200 Persian words for a reading experiment. With LexPrep:</p>
-                
-                <div class="space-y-4 relative before:absolute before:inset-0 before:ml-[11px] before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-700 before:to-transparent">
-                    
-                    <div class="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
-                        <div class="flex items-center justify-center w-6 h-6 rounded-full border-2 border-amber-500 bg-slate-900 text-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.5)] shrink-0 z-10">
-                            <span class="text-[10px] font-bold">1</span>
-                        </div>
-                        <div class="w-[calc(100%-3rem)] md:w-[calc(50%-2rem)] p-3 rounded border border-slate-700 bg-slate-800/50 ml-4 md:ml-0 md:mr-8 md:group-odd:ml-8 md:group-odd:mr-0 text-sm">
-                            <strong class="text-slate-200">Upload</strong> raw wordlist (XLSX/CSV/TXT)
-                        </div>
-                    </div>
-                    
-                    <div class="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
-                        <div class="flex items-center justify-center w-6 h-6 rounded-full border-2 border-cyan-500 bg-slate-900 text-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.5)] shrink-0 z-10">
-                            <span class="text-[10px] font-bold">2</span>
-                        </div>
-                        <div class="w-[calc(100%-3rem)] md:w-[calc(50%-2rem)] p-3 rounded border border-slate-700 bg-slate-800/50 ml-4 md:ml-0 md:mr-8 md:group-odd:ml-8 md:group-odd:mr-0 text-sm">
-                            <strong class="text-slate-200">Enrich:</strong> add G2P, syllables, POS in one step
-                        </div>
-                    </div>
-
-                    <div class="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
-                        <div class="flex items-center justify-center w-6 h-6 rounded-full border-2 border-purple-500 bg-slate-900 text-purple-500 shadow-[0_0_10px_rgba(168,85,247,0.5)] shrink-0 z-10">
-                            <span class="text-[10px] font-bold">3</span>
-                        </div>
-                        <div class="w-[calc(100%-3rem)] md:w-[calc(50%-2rem)] p-3 rounded border border-slate-700 bg-slate-800/50 ml-4 md:ml-0 md:mr-8 md:group-odd:ml-8 md:group-odd:mr-0 text-sm">
-                            <strong class="text-slate-200">Sample:</strong> stratified selection across frequency bins
-                        </div>
-                    </div>
-
-                    <div class="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
-                        <div class="flex items-center justify-center w-6 h-6 rounded-full border-2 border-emerald-500 bg-slate-900 text-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)] shrink-0 z-10">
-                            <span class="text-[10px] font-bold">4</span>
-                        </div>
-                        <div class="w-[calc(100%-3rem)] md:w-[calc(50%-2rem)] p-3 rounded border border-slate-700 bg-slate-800/50 ml-4 md:ml-0 md:mr-8 md:group-odd:ml-8 md:group-odd:mr-0 text-sm">
-                            <strong class="text-slate-200">Export:</strong> ZIP pack with manifest for replication
-                        </div>
-                    </div>
-
-                </div>
-                
-                <div class="mt-6 p-4 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-center">
-                    <p class="text-emerald-400 font-semibold flex items-center justify-center gap-2">
-                        <i data-lucide="timer" class="w-5 h-5"></i> Total time: minutes, not hours.
-                    </p>
-                    <p class="text-emerald-300/70 text-sm mt-1">Fully documented.</p>
-                </div>
-            </div>
-            
-        </section>
-
-        <!-- ROADMAP & VISION -->
-        <section class="mb-24 reveal">
-            <div class="glow-card rounded-3xl p-8 border border-slate-700" style="--glow-color: rgba(255, 255, 255, 0.05);">
-                <div class="flex flex-col md:flex-row gap-10 items-center">
-                    <div class="md:w-1/3 text-center md:text-left">
-                        <h2 class="text-3xl font-bold text-white mb-4 flex items-center justify-center md:justify-start gap-3">
-                            <i data-lucide="map" class="w-8 h-8 text-fuchsia-400"></i> Roadmap
-                        </h2>
-                        <p class="text-slate-400 text-sm leading-relaxed mb-6">
-                            LexPrep aims to become the standard infrastructure for reproducible data preparation in experimental research.
-                        </p>
-                        <div class="inline-block p-3 rounded-xl bg-slate-800/50 border border-slate-700">
-                            <i data-lucide="rocket" class="w-10 h-10 text-fuchsia-500 mx-auto animate-float"></i>
-                        </div>
-                    </div>
-                    
-                    <div class="md:w-2/3 grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
-                        <!-- Completed -->
-                        <div class="flex items-start gap-3 p-3 rounded-lg bg-emerald-500/5 border border-emerald-500/20">
-                            <i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-500 shrink-0 mt-0.5"></i>
-                            <span class="text-slate-200 text-sm">Linguistic enrichment (G2P, syllables, POS)</span>
-                        </div>
-                        <div class="flex items-start gap-3 p-3 rounded-lg bg-emerald-500/5 border border-emerald-500/20">
-                            <i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-500 shrink-0 mt-0.5"></i>
-                            <span class="text-slate-200 text-sm">Stratified sampling & multi-file shuffle</span>
-                        </div>
-                        <div class="flex items-start gap-3 p-3 rounded-lg bg-emerald-500/5 border border-emerald-500/20">
-                            <i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-500 shrink-0 mt-0.5"></i>
-                            <span class="text-slate-200 text-sm">ZIP reproducibility packs with JSON manifest</span>
-                        </div>
-                        
-                        <!-- Planned -->
-                        <div class="flex items-start gap-3 p-3 rounded-lg bg-slate-800/50 border border-slate-700 border-dashed">
-                            <i data-lucide="circle" class="w-5 h-5 text-slate-500 shrink-0 mt-0.5"></i>
-                            <span class="text-slate-400 text-sm">Statistical validation & distribution testing</span>
-                        </div>
-                        <div class="flex items-start gap-3 p-3 rounded-lg bg-slate-800/50 border border-slate-700 border-dashed">
-                            <i data-lucide="circle" class="w-5 h-5 text-slate-500 shrink-0 mt-0.5"></i>
-                            <span class="text-slate-400 text-sm">Frequency integration from external corpora</span>
-                        </div>
-                        <div class="flex items-start gap-3 p-3 rounded-lg bg-slate-800/50 border border-slate-700 border-dashed">
-                            <i data-lucide="circle" class="w-5 h-5 text-slate-500 shrink-0 mt-0.5"></i>
-                            <span class="text-slate-400 text-sm">Additional language support</span>
-                        </div>
-                        <div class="flex items-start gap-3 p-3 rounded-lg bg-slate-800/50 border border-slate-700 border-dashed sm:col-span-2">
-                            <i data-lucide="circle" class="w-5 h-5 text-slate-500 shrink-0 mt-0.5"></i>
-                            <span class="text-slate-400 text-sm">Lab-level collaboration features</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- FOOTER -->
-        <footer class="border-t border-slate-800 pt-8 mt-12 flex flex-col items-center justify-center text-center reveal">
-            <div class="text-slate-400 mb-4 font-medium flex items-center gap-2">
-                <i data-lucide="user" class="w-4 h-4"></i> Sajjad Mazaherizaveh
-            </div>
-            <div class="flex flex-wrap justify-center gap-4 text-sm text-slate-500 mb-6">
-                <a href="mailto:sajjadmazaherizaveh@gmail.com" class="hover:text-indigo-400 transition-colors flex items-center gap-1"><i data-lucide="mail" class="w-4 h-4"></i> sajjadmazaherizaveh@gmail.com</a>
-                <span>|</span>
-                <span class="flex items-center gap-1"><i data-lucide="fingerprint" class="w-4 h-4"></i> ORCID: 0009-0001-0465-0444</span>
-            </div>
-            <div class="text-xs text-slate-600">
-                Open source MIT License &copy; 2025–2026
-            </div>
-        </footer>
-
-    </main>
-
-    <script>
-        // Initialize Lucide Icons
-        lucide.createIcons();
-
-        // Mouse Tracking Effect for Glow Cards
-        document.querySelectorAll('.glow-card').forEach(card => {
-            card.addEventListener('mousemove', e => {
-                const rect = card.getBoundingClientRect();
-                const x = e.clientX - rect.left;
-                const y = e.clientY - rect.top;
-                card.style.setProperty('--mouse-x', `${x}px`);
-                card.style.setProperty('--mouse-y', `${y}px`);
-            });
-        });
-
-        // Scroll Reveal Observer
-        const observerOptions = {
-            root: null,
-            rootMargin: '0px',
-            threshold: 0.15
-        };
-
-        const observer = new IntersectionObserver((entries, observer) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('active');
-                    observer.unobserve(entry.target);
-                }
-            });
-        }, observerOptions);
-
-        document.querySelectorAll('.reveal').forEach((el) => {
-            observer.observe(el);
-        });
-        
-        // Trigger initially visible elements
-        setTimeout(() => {
-            document.querySelectorAll('.reveal').forEach(el => {
-                const rect = el.getBoundingClientRect();
-                if(rect.top < window.innerHeight) {
-                    el.classList.add('active');
-                }
-            });
-        }, 100);
-    </script>
-
-    <!-- Demo Modal -->
-    <div id="demoModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.88);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;" onclick="if(event.target===this)closeDemoModal()">
-        <div style="position:relative;width:90vw;max-width:1100px;max-height:85vh;background:#0f172a;border-radius:16px;border:1px solid rgba(99,102,241,0.3);box-shadow:0 0 60px rgba(99,102,241,0.2);padding:16px;animation:scaleIn 0.25s ease;">
-            <button onclick="closeDemoModal()" aria-label="Close demo" style="position:absolute;top:-12px;right:-12px;width:36px;height:36px;border-radius:50%;border:1px solid rgba(255,255,255,0.2);background:#1e293b;color:#fff;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10;transition:background 0.2s,transform 0.15s;" onmouseover="this.style.background='#ef4444';this.style.transform='scale(1.1)'" onmouseout="this.style.background='#1e293b';this.style.transform='scale(1)'">&times;</button>
-            <div style="position:relative;box-sizing:content-box;width:100%;aspect-ratio:1.78;padding:0;">
-                <iframe id="demoIframe" src="" loading="lazy" title="LexPrep Interactive Demo" allow="clipboard-write" frameborder="0" webkitallowfullscreen="true" mozallowfullscreen="true" allowfullscreen style="position:absolute;top:0;left:0;width:100%;height:100%;border-radius:12px;"></iframe>
+                <h2 class="text-2xl sm:text-3xl font-bold text-white mb-4 flex items-center gap-3">
+                    <i data-lucide="file-warning" class="w-8 h-8 text-red-400"></i> The Problem
+                </h2>
+                <p class="text-slate-300 text-lg leading-relaxed max-w-4xl">
+                    Across experimental research, data preparation is one of the most time-consuming stages, yet it remains <span class="text-red-300 bg-red-500/10 px-1 rounded">largely undocumented</span>. Stimulus lists and datasets are built manually in spreadsheets, with no version control, no audit trails, and no standardized way to reproduce or share the process. Published studies rarely document how items were filtered, balanced, or allocated. This reproducibility gap undermines confidence in results and makes replication unnecessarily difficult.
+                </p>
             </div>
         </div>
-    </div>
 
-    <script>
-        function openDemoModal() {
-            var modal = document.getElementById('demoModal');
-            var iframe = document.getElementById('demoIframe');
-            iframe.src = 'https://demo.lexprep.net/embed/cmmaipueb83yodtfhvvsjd329?embed_v=2&utm_source=embed';
-            modal.style.display = 'flex';
-            document.body.style.overflow = 'hidden';
-        }
-        function closeDemoModal() {
-            var modal = document.getElementById('demoModal');
-            var iframe = document.getElementById('demoIframe');
-            modal.style.display = 'none';
-            iframe.src = '';
-            document.body.style.overflow = '';
-        }
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') closeDemoModal();
+        <div class="flex justify-center mt-8 text-slate-500">
+            <i data-lucide="arrow-down-circle" class="w-8 h-8 animate-bounce"></i>
+        </div>
+    </section>
+
+    <section class="mb-24">
+        <h2 class="text-3xl sm:text-4xl font-bold text-center mb-12 text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.2)] reveal">
+            The LexPrep Workflow
+        </h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="glow-card rounded-2xl p-6 border border-slate-700/50 hover:border-indigo-500/50 transition-colors reveal" style="--glow-color: rgba(99, 102, 241, 0.15);">
+                <div class="w-14 h-14 rounded-xl bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center mb-6 shadow-[0_0_15px_rgba(99,102,241,0.2)]">
+                    <span class="text-2xl font-bold text-indigo-400">1</span>
+                </div>
+                <h3 class="text-xl font-bold text-white mb-2 flex items-center gap-2">
+                    <i data-lucide="sparkles" class="w-5 h-5 text-indigo-400"></i> Enrich
+                </h3>
+                <p class="text-indigo-300/80 text-sm font-medium mb-4">Automated Linguistic Enrichment</p>
+                <ul class="space-y-3 text-slate-300 text-sm">
+                    <li class="flex items-start gap-2"><i data-lucide="check" class="w-4 h-4 text-indigo-500 mt-0.5 shrink-0"></i> G2P phonetic transcription</li>
+                    <li class="flex items-start gap-2"><i data-lucide="check" class="w-4 h-4 text-indigo-500 mt-0.5 shrink-0"></i> Syllable counting</li>
+                    <li class="flex items-start gap-2"><i data-lucide="check" class="w-4 h-4 text-indigo-500 mt-0.5 shrink-0"></i> POS tagging (UPOS + fine-grained)</li>
+                    <li class="flex items-start gap-2"><i data-lucide="check" class="w-4 h-4 text-indigo-500 mt-0.5 shrink-0"></i> Word length (Unicode codepoints)</li>
+                </ul>
+                <div class="mt-5 pt-5 border-t border-slate-700/50 text-xs text-slate-400">
+                    Supports Persian, English, Japanese
+                </div>
+            </div>
+
+            <div class="glow-card rounded-2xl p-6 border border-slate-700/50 hover:border-purple-500/50 transition-colors reveal delay-100" style="--glow-color: rgba(168, 85, 247, 0.15);">
+                <div class="w-14 h-14 rounded-xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center mb-6 shadow-[0_0_15px_rgba(168,85,247,0.2)]">
+                    <span class="text-2xl font-bold text-purple-400">2</span>
+                </div>
+                <h3 class="text-xl font-bold text-white mb-2 flex items-center gap-2">
+                    <i data-lucide="layers" class="w-5 h-5 text-purple-400"></i> Sample
+                </h3>
+                <p class="text-purple-300/80 text-sm font-medium mb-4">Bias-Aware Stratified Sampling</p>
+                <ul class="space-y-3 text-slate-300 text-sm">
+                    <li class="flex items-start gap-2"><i data-lucide="check" class="w-4 h-4 text-purple-500 mt-0.5 shrink-0"></i> Quantile-based stratification</li>
+                    <li class="flex items-start gap-2"><i data-lucide="check" class="w-4 h-4 text-purple-500 mt-0.5 shrink-0"></i> Equal, proportional, optimal (Neyman) and fixed allocation methods</li>
+                    <li class="flex items-start gap-2"><i data-lucide="check" class="w-4 h-4 text-purple-500 mt-0.5 shrink-0"></i> Seeded randomization for exact reproduction across runs</li>
+                </ul>
+            </div>
+
+            <div class="glow-card rounded-2xl p-6 border border-slate-700/50 hover:border-emerald-500/50 transition-colors reveal delay-200" style="--glow-color: rgba(16, 185, 129, 0.15);">
+                <div class="w-14 h-14 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center mb-6 shadow-[0_0_15px_rgba(16,185,129,0.2)]">
+                    <span class="text-2xl font-bold text-emerald-400">3</span>
+                </div>
+                <h3 class="text-xl font-bold text-white mb-2 flex items-center gap-2">
+                    <i data-lucide="clipboard-check" class="w-5 h-5 text-emerald-400"></i> Audit
+                </h3>
+                <p class="text-emerald-300/80 text-sm font-medium mb-4">Machine-Readable Audit Trails</p>
+                <ul class="space-y-3 text-slate-300 text-sm">
+                    <li class="flex items-start gap-2"><i data-lucide="check" class="w-4 h-4 text-emerald-500 mt-0.5 shrink-0"></i> ZIP reproducibility pack per run</li>
+                    <li class="flex items-start gap-2"><i data-lucide="check" class="w-4 h-4 text-emerald-500 mt-0.5 shrink-0"></i> JSON manifest: tool, version, seed, timestamp, library versions</li>
+                    <li class="flex items-start gap-2"><i data-lucide="check" class="w-4 h-4 text-emerald-500 mt-0.5 shrink-0"></i> Per-bin statistics and excluded items</li>
+                    <li class="flex items-start gap-2"><i data-lucide="check" class="w-4 h-4 text-emerald-500 mt-0.5 shrink-0"></i> Full documentation of every decision</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <section class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-24 reveal">
+        <div class="glow-card rounded-2xl p-6 border border-slate-700 hover:shadow-[0_0_30px_rgba(59,130,246,0.1)] transition-shadow" style="--glow-color: rgba(59, 130, 246, 0.1);">
+            <h3 class="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                <i data-lucide="languages" class="w-5 h-5 text-blue-400"></i> Supported Languages & Tools
+            </h3>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm whitespace-nowrap">
+                    <thead>
+                        <tr class="border-b border-slate-700 text-slate-400">
+                            <th class="pb-3 font-medium">Language</th>
+                            <th class="pb-3 font-medium">G2P</th>
+                            <th class="pb-3 font-medium">Syllables</th>
+                            <th class="pb-3 font-medium">POS</th>
+                            <th class="pb-3 font-medium text-center">Length</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-800">
+                        <tr class="hover:bg-slate-800/50 transition-colors group">
+                            <td class="py-3 font-medium text-white flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-emerald-500 group-hover:shadow-[0_0_8px_#10b981]"></span> Persian</td>
+                            <td class="py-3 text-slate-300">PersianG2p</td>
+                            <td class="py-3 text-slate-300">Heuristic</td>
+                            <td class="py-3 text-slate-300">Stanza</td>
+                            <td class="py-3 text-center text-emerald-400"><i data-lucide="check" class="w-4 h-4 mx-auto"></i></td>
+                        </tr>
+                        <tr class="hover:bg-slate-800/50 transition-colors group">
+                            <td class="py-3 font-medium text-white flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-blue-500 group-hover:shadow-[0_0_8px_#3b82f6]"></span> English</td>
+                            <td class="py-3 text-slate-300">g2p-en (CMU)</td>
+                            <td class="py-3 text-slate-300">pyphen (TeX)</td>
+                            <td class="py-3 text-slate-300">spaCy</td>
+                            <td class="py-3 text-center text-emerald-400"><i data-lucide="check" class="w-4 h-4 mx-auto"></i></td>
+                        </tr>
+                        <tr class="hover:bg-slate-800/50 transition-colors group">
+                            <td class="py-3 font-medium text-white flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-red-500 group-hover:shadow-[0_0_8px_#ef4444]"></span> Japanese</td>
+                            <td class="py-3 text-slate-500">-</td>
+                            <td class="py-3 text-slate-500">-</td>
+                            <td class="py-3 text-slate-300">Stanza/UniDic</td>
+                            <td class="py-3 text-center text-emerald-400"><i data-lucide="check" class="w-4 h-4 mx-auto"></i></td>
+                        </tr>
+                        <tr class="hover:bg-slate-800/50 transition-colors group">
+                            <td class="py-3 font-medium text-white flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-slate-500 group-hover:shadow-[0_0_8px_#64748b]"></span> Any</td>
+                            <td class="py-3 text-slate-500">-</td>
+                            <td class="py-3 text-slate-500">-</td>
+                            <td class="py-3 text-slate-500">-</td>
+                            <td class="py-3 text-center text-emerald-400"><i data-lucide="check" class="w-4 h-4 mx-auto"></i></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="glow-card rounded-2xl p-6 border border-slate-700 hover:shadow-[0_0_30px_rgba(245,158,11,0.1)] transition-shadow" style="--glow-color: rgba(245, 158, 11, 0.1);">
+            <h3 class="text-xl font-bold text-white mb-2 flex items-center gap-2">
+                <i data-lucide="play-circle" class="w-5 h-5 text-amber-400"></i> Example Use Case
+            </h3>
+            <p class="text-sm text-slate-400 mb-6">A researcher preparing 200 Persian words for a reading experiment. With LexPrep:</p>
+
+            <div class="space-y-4 relative before:absolute before:inset-0 before:ml-[11px] before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-700 before:to-transparent">
+                <div class="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
+                    <div class="flex items-center justify-center w-6 h-6 rounded-full border-2 border-amber-500 bg-slate-900 text-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.5)] shrink-0 z-10">
+                        <span class="text-[10px] font-bold">1</span>
+                    </div>
+                    <div class="w-[calc(100%-3rem)] md:w-[calc(50%-2rem)] p-3 rounded border border-slate-700 bg-slate-800/50 ml-4 md:ml-0 md:mr-8 md:group-odd:ml-8 md:group-odd:mr-0 text-sm">
+                        <strong class="text-slate-200">Upload</strong> raw wordlist (XLSX/CSV/TXT)
+                    </div>
+                </div>
+
+                <div class="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
+                    <div class="flex items-center justify-center w-6 h-6 rounded-full border-2 border-cyan-500 bg-slate-900 text-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.5)] shrink-0 z-10">
+                        <span class="text-[10px] font-bold">2</span>
+                    </div>
+                    <div class="w-[calc(100%-3rem)] md:w-[calc(50%-2rem)] p-3 rounded border border-slate-700 bg-slate-800/50 ml-4 md:ml-0 md:mr-8 md:group-odd:ml-8 md:group-odd:mr-0 text-sm">
+                        <strong class="text-slate-200">Enrich:</strong> add G2P, syllables, POS in one step
+                    </div>
+                </div>
+
+                <div class="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
+                    <div class="flex items-center justify-center w-6 h-6 rounded-full border-2 border-purple-500 bg-slate-900 text-purple-500 shadow-[0_0_10px_rgba(168,85,247,0.5)] shrink-0 z-10">
+                        <span class="text-[10px] font-bold">3</span>
+                    </div>
+                    <div class="w-[calc(100%-3rem)] md:w-[calc(50%-2rem)] p-3 rounded border border-slate-700 bg-slate-800/50 ml-4 md:ml-0 md:mr-8 md:group-odd:ml-8 md:group-odd:mr-0 text-sm">
+                        <strong class="text-slate-200">Sample:</strong> stratified selection across frequency bins
+                    </div>
+                </div>
+
+                <div class="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
+                    <div class="flex items-center justify-center w-6 h-6 rounded-full border-2 border-emerald-500 bg-slate-900 text-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)] shrink-0 z-10">
+                        <span class="text-[10px] font-bold">4</span>
+                    </div>
+                    <div class="w-[calc(100%-3rem)] md:w-[calc(50%-2rem)] p-3 rounded border border-slate-700 bg-slate-800/50 ml-4 md:ml-0 md:mr-8 md:group-odd:ml-8 md:group-odd:mr-0 text-sm">
+                        <strong class="text-slate-200">Export:</strong> ZIP pack with manifest for replication
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-6 p-4 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-center">
+                <p class="text-emerald-400 font-semibold flex items-center justify-center gap-2">
+                    <i data-lucide="timer" class="w-5 h-5"></i> Total time: minutes, not hours.
+                </p>
+                <p class="text-emerald-300/70 text-sm mt-1">Fully documented.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="mb-24 reveal">
+        <div class="glow-card rounded-3xl p-8 border border-slate-700" style="--glow-color: rgba(255, 255, 255, 0.05);">
+            <div class="flex flex-col md:flex-row gap-10 items-center">
+                <div class="md:w-1/3 text-center md:text-left">
+                    <h2 class="text-3xl font-bold text-white mb-4 flex items-center justify-center md:justify-start gap-3">
+                        <i data-lucide="map" class="w-8 h-8 text-fuchsia-400"></i> Roadmap
+                    </h2>
+                    <p class="text-slate-400 text-sm leading-relaxed mb-6">
+                        LexPrep aims to become the standard infrastructure for reproducible data preparation in experimental research.
+                    </p>
+                    <div class="inline-block p-3 rounded-xl bg-slate-800/50 border border-slate-700">
+                        <i data-lucide="rocket" class="w-10 h-10 text-fuchsia-500 mx-auto animate-float"></i>
+                    </div>
+                </div>
+
+                <div class="md:w-2/3 grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
+                    <div class="flex items-start gap-3 p-3 rounded-lg bg-emerald-500/5 border border-emerald-500/20">
+                        <i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-500 shrink-0 mt-0.5"></i>
+                        <span class="text-slate-200 text-sm">Linguistic enrichment (G2P, syllables, POS)</span>
+                    </div>
+                    <div class="flex items-start gap-3 p-3 rounded-lg bg-emerald-500/5 border border-emerald-500/20">
+                        <i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-500 shrink-0 mt-0.5"></i>
+                        <span class="text-slate-200 text-sm">Stratified sampling & multi-file shuffle</span>
+                    </div>
+                    <div class="flex items-start gap-3 p-3 rounded-lg bg-emerald-500/5 border border-emerald-500/20">
+                        <i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-500 shrink-0 mt-0.5"></i>
+                        <span class="text-slate-200 text-sm">ZIP reproducibility packs with JSON manifest</span>
+                    </div>
+
+                    <div class="flex items-start gap-3 p-3 rounded-lg bg-slate-800/50 border border-slate-700 border-dashed">
+                        <i data-lucide="circle" class="w-5 h-5 text-slate-500 shrink-0 mt-0.5"></i>
+                        <span class="text-slate-400 text-sm">Statistical validation & distribution testing</span>
+                    </div>
+                    <div class="flex items-start gap-3 p-3 rounded-lg bg-slate-800/50 border border-slate-700 border-dashed">
+                        <i data-lucide="circle" class="w-5 h-5 text-slate-500 shrink-0 mt-0.5"></i>
+                        <span class="text-slate-400 text-sm">Frequency integration from external corpora</span>
+                    </div>
+                    <div class="flex items-start gap-3 p-3 rounded-lg bg-slate-800/50 border border-slate-700 border-dashed">
+                        <i data-lucide="circle" class="w-5 h-5 text-slate-500 shrink-0 mt-0.5"></i>
+                        <span class="text-slate-400 text-sm">Additional language support</span>
+                    </div>
+                    <div class="flex items-start gap-3 p-3 rounded-lg bg-slate-800/50 border border-slate-700 border-dashed sm:col-span-2">
+                        <i data-lucide="circle" class="w-5 h-5 text-slate-500 shrink-0 mt-0.5"></i>
+                        <span class="text-slate-400 text-sm">Lab-level collaboration features</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+<div id="demoModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.88);backdrop-filter:blur(8px);align-items:center;justify-content:center;" onclick="if(event.target===this)closeDemoModal()">
+    <div style="position:relative;width:90vw;max-width:1100px;max-height:85vh;background:#0f172a;border-radius:16px;border:1px solid rgba(99,102,241,0.3);box-shadow:0 0 60px rgba(99,102,241,0.2);padding:16px;">
+        <button onclick="closeDemoModal()" aria-label="Close demo" style="position:absolute;top:-12px;right:-12px;width:36px;height:36px;border-radius:50%;border:1px solid rgba(255,255,255,0.2);background:#1e293b;color:#fff;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10;transition:background 0.2s,transform 0.15s;" onmouseover="this.style.background='#ef4444';this.style.transform='scale(1.1)'" onmouseout="this.style.background='#1e293b';this.style.transform='scale(1)'">&times;</button>
+        <div style="position:relative;box-sizing:content-box;width:100%;aspect-ratio:1.78;padding:0;">
+            <iframe id="demoIframe" src="" loading="lazy" title="LexPrep Interactive Demo" allow="clipboard-write" frameborder="0" webkitallowfullscreen="true" mozallowfullscreen="true" allowfullscreen style="position:absolute;top:0;left:0;width:100%;height:100%;border-radius:12px;"></iframe>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block footer %}
+<footer class="border-t border-slate-800 pt-8 mt-12 flex flex-col items-center justify-center text-center">
+    <div class="text-slate-400 mb-4 font-medium flex items-center gap-2">
+        <i data-lucide="user" class="w-4 h-4"></i> Sajjad Mazaherizaveh
+    </div>
+    <div class="flex flex-wrap justify-center gap-4 text-sm text-slate-500 mb-6">
+        <a href="mailto:sajjadmazaherizaveh@gmail.com" class="hover:text-indigo-400 transition-colors flex items-center gap-1"><i data-lucide="mail" class="w-4 h-4"></i> sajjadmazaherizaveh@gmail.com</a>
+        <span>|</span>
+        <span class="flex items-center gap-1"><i data-lucide="fingerprint" class="w-4 h-4"></i> ORCID: 0009-0001-0465-0444</span>
+    </div>
+    <div class="text-xs text-slate-600">
+        Open source MIT License &copy; 2025–2026
+    </div>
+</footer>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    if (window.lucide && window.lucide.createIcons) {
+        window.lucide.createIcons();
+    }
+
+    document.querySelectorAll('.glow-card').forEach(card => {
+        card.addEventListener('mousemove', e => {
+            const rect = card.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            card.style.setProperty('--mouse-x', `${x}px`);
+            card.style.setProperty('--mouse-y', `${y}px`);
         });
-    </script>
-</body>
-</html>
+    });
+
+    const observerOptions = {
+        root: null,
+        rootMargin: '0px',
+        threshold: 0.15
+    };
+
+    const observer = new IntersectionObserver((entries, obs) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('active');
+                obs.unobserve(entry.target);
+            }
+        });
+    }, observerOptions);
+
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+    setTimeout(() => {
+        document.querySelectorAll('.reveal').forEach(el => {
+            const rect = el.getBoundingClientRect();
+            if (rect.top < window.innerHeight) {
+                el.classList.add('active');
+            }
+        });
+    }, 100);
+
+    window.openDemoModal = function() {
+        const modal = document.getElementById('demoModal');
+        const iframe = document.getElementById('demoIframe');
+        iframe.src = 'https://demo.lexprep.net/embed/cmmaipueb83yodtfhvvsjd329?embed_v=2&utm_source=embed';
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    };
+
+    window.closeDemoModal = function() {
+        const modal = document.getElementById('demoModal');
+        const iframe = document.getElementById('demoIframe');
+        modal.style.display = 'none';
+        iframe.src = '';
+        document.body.style.overflow = '';
+    };
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            window.closeDemoModal();
+        }
+    });
+</script>
+{% endblock %}

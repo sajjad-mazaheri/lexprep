@@ -401,7 +401,7 @@ def sampling():
 @app.route('/overview')
 def overview():
     log_page_view('overview')
-    return render_template('overview.html')
+    return render_template('overview.html', active_page='overview')
 
 
 @app.route('/admin')
