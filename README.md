@@ -27,7 +27,7 @@
 </p>
 
 <p align="center">
-  <a href="https://demo.lexprep.net/demo/cmmaipueb83yodtfhvvsjd329">🎯 Live Demo</a> · <a href="https://youtu.be/YvY3CG6uIdQ?si=MjG0Slv5jyauL1Sr">🎬 Video Walkthrough</a> · <a href="https://lexprep.net/overview">📖 Overview</a> · <a href="QUICKSTART.md">🚀 Quick Start</a>
+  <a href="https://demosetup.lexprep.net/demo/cmmc3v2pk01gsxk0ikf0upe0a">🎯 Live Demo</a> · <a href="https://youtu.be/YvY3CG6uIdQ?si=MjG0Slv5jyauL1Sr">🎬 Video Walkthrough</a> · <a href="https://lexprep.net/overview">📖 Overview</a> · <a href="QUICKSTART.md">🚀 Quick Start</a>
 </p>
 
 ---
