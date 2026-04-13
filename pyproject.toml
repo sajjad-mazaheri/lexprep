@@ -51,7 +51,7 @@ en = [
 ]
 dev = [
   "pytest>=8.0",
-  "pytest-cov>=4.0",
+  "pytest-cov>=7.1.0",
   "ruff>=0.6",
   "mypy>=1.10"
 ]
