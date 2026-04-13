@@ -42,7 +42,7 @@ fa = [
 ja = [
   "stanza>=1.8",
   "fugashi>=1.3",
-  "unidic-lite>=1.0"
+  "unidic-lite>=1.0.8"
 ]
 en = [
   "g2p-en>=2.1",
