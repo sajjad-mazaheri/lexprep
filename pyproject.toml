@@ -36,11 +36,11 @@ dependencies = [
 
 [project.optional-dependencies]
 fa = [
-  "stanza>=1.8",
+  "stanza>=1.11.1",
   "PersianG2p>=0.1.5"
 ]
 ja = [
-  "stanza>=1.8",
+  "stanza>=1.11.1",
   "fugashi>=1.3",
   "unidic-lite>=1.0"
 ]
