@@ -1,0 +1,176 @@
+{% extends 'base.html' %}
+
+{% block title %}lexprep{% endblock %}
+{% block description %}Open research infrastructure for reproducible stimulus and data preparation.{% endblock %}
+
+{% block extra_head %}
+<style>
+    .home-shell {
+        min-height: calc(100vh - var(--nav-height));
+        padding: calc(var(--nav-height) + 80px) 0 120px;
+        display: flex;
+        align-items: center;
+    }
+
+    .home-shell .container {
+        width: 100%;
+    }
+
+    .home-hero {
+        max-width: 780px;
+        margin: 0 auto;
+        text-align: center;
+    }
+
+    .home-eyebrow {
+        display: inline-block;
+        font-size: 0.78rem;
+        font-weight: 500;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: #7dd3fc;
+        margin-bottom: 28px;
+    }
+
+    .home-title {
+        font-size: clamp(2.2rem, 5.2vw, 3.6rem);
+        line-height: 1.1;
+        font-weight: 700;
+        color: #f8fafc;
+        letter-spacing: -0.025em;
+        margin-bottom: 24px;
+    }
+
+    .home-highlight {
+        background: var(--gradient-primary);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .home-lead {
+        color: #94a3b8;
+        font-size: 1.1rem;
+        line-height: 1.65;
+        max-width: 620px;
+        margin: 0 auto 40px;
+    }
+
+    .home-actions {
+        display: flex;
+        justify-content: center;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 64px;
+    }
+
+    .home-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 13px 22px;
+        border-radius: 10px;
+        font-weight: 500;
+        font-size: 0.95rem;
+        text-decoration: none;
+        transition: transform var(--transition-fast), background var(--transition-fast), border-color var(--transition-fast);
+    }
+
+    .home-link-primary {
+        background: #f8fafc;
+        color: #0f172a;
+    }
+
+    .home-link-primary:hover {
+        transform: translateY(-1px);
+        background: #ffffff;
+    }
+
+    .home-link-ghost {
+        color: #cbd5e1;
+        border: 1px solid rgba(148, 163, 184, 0.28);
+    }
+
+    .home-link-ghost:hover {
+        border-color: rgba(148, 163, 184, 0.55);
+        color: #f8fafc;
+    }
+
+    .home-pillars {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 32px;
+        max-width: 960px;
+        margin: 0 auto;
+        padding-top: 40px;
+        border-top: 1px solid rgba(148, 163, 184, 0.12);
+    }
+
+    .home-pillar h3 {
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: #f1f5f9;
+        margin-bottom: 8px;
+        letter-spacing: -0.01em;
+    }
+
+    .home-pillar p {
+        font-size: 0.9rem;
+        line-height: 1.6;
+        color: #94a3b8;
+    }
+
+    @media (max-width: 780px) {
+        .home-shell {
+            padding: calc(var(--nav-height) + 56px) 0 80px;
+        }
+
+        .home-pillars {
+            grid-template-columns: 1fr;
+            gap: 24px;
+            padding-top: 32px;
+        }
+
+        .home-actions {
+            margin-bottom: 48px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block page_content %}
+<main class="home-shell">
+    <div class="container">
+        <section class="home-hero">
+            <span class="home-eyebrow">Open research infrastructure</span>
+            <h1 class="home-title">
+                Reproducible <span class="home-highlight">stimulus and data</span> preparation.
+            </h1>
+            <p class="home-lead">
+                A modular toolkit for linguistic enrichment, sampling, and audit-ready export.
+                Start with wordlists in Persian, English, and Japanese.
+            </p>
+
+            <div class="home-actions">
+                <a href="/tools" class="home-link home-link-primary">Open tools</a>
+                <a href="/overview" class="home-link home-link-ghost">Read overview</a>
+            </div>
+
+            <div class="home-pillars">
+                <div class="home-pillar">
+                    <h3>Enrich</h3>
+                    <p>G2P, syllables, POS, and length features appended to your wordlist.</p>
+                </div>
+                <div class="home-pillar">
+                    <h3>Sample</h3>
+                    <p>Stratified selection and synchronized shuffle for balanced sets.</p>
+                </div>
+                <div class="home-pillar">
+                    <h3>Reproduce</h3>
+                    <p>Every run captures seed, parameters, and version in a portable manifest.</p>
+                </div>
+            </div>
+        </section>
+    </div>
+</main>
+{% endblock %}

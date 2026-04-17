@@ -67,12 +67,21 @@ const elements = {
 // ============== Initialization ==============
 document.addEventListener('DOMContentLoaded', () => {
     initNavigation();
-    loadTools();
-    initFileUpload();
-    initEventListeners();
-    initSamplingUI();
-    initTypingAnimation();
-    triggerWarmup();
+
+    const isToolsPage = Boolean(document.getElementById('languageGrid') && document.getElementById('processBtn'));
+    const isSamplingPage = Boolean(document.getElementById('stratifiedForm'));
+
+    if (isToolsPage) {
+        loadTools();
+        initFileUpload();
+        initEventListeners();
+        initTypingAnimation();
+        triggerWarmup();
+    }
+
+    if (isSamplingPage) {
+        initSamplingUI();
+    }
 });
 
 // ============== Model Warmup ==============

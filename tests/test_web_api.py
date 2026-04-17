@@ -124,7 +124,7 @@ class TestPageRoutes:
 
     @pytest.mark.parametrize("path", [
         "/", "/about", "/author", "/contribute", "/references",
-        "/accuracy", "/sampling",
+        "/accuracy", "/sampling", "/overview", "/tools",
     ])
     def test_pages_return_200(self, client, path):
         resp = client.get(path)

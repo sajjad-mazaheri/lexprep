@@ -280,7 +280,7 @@ def hash_ip(ip):
 # Valid page names for analytics
 _VALID_PAGES = {
     'home', 'about', 'author', 'contribute', 'references',
-    'accuracy', 'sampling', 'admin', 'unknown',
+    'accuracy', 'sampling', 'overview', 'tools', 'admin', 'unknown',
 }
 
 
@@ -345,9 +345,15 @@ def inject_globals():
 # Page Routes
 
 @app.route('/')
-def index():
+def home():
     log_page_view('home')
-    return render_template('index.html', active_page='home')
+    return render_template('home.html', active_page='home')
+
+
+@app.route('/tools')
+def tools():
+    log_page_view('tools')
+    return render_template('index.html', active_page='tools')
 
 
 @app.route('/about')
